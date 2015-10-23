@@ -6,3 +6,5 @@ It assumes you have installed the RMySQL package in R and that your GameDay data
 (To learn more about Baseball On A Stick, see: http://sourceforge.net/projects/baseballonastic/)
 
 Otherwise, you must amend the queries to match your database schema.
+
+Usage of flat file data is NOT Recommended because of the memory intensity.
