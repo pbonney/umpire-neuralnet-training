@@ -9,11 +9,11 @@ h.gen <- 5
 
 # Gets the min and max date for regular season games in a given year.
 get.date.range.f <- function(year) {
-	sqlString <- 	"SELECT min(STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') as min_date,
-				max(STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') as max_date
-			FROM	game
+	sqlString <- 	"SELECT min(STR_TO_DATE(concat(substr(gameName,5,4),'-',substr(gameName,10,2),'-',substr(gameName,13,2)), '%Y-%m-%d')) as min_date,
+				max(STR_TO_DATE(concat(substr(gameName,5,4),'-',substr(gameName,10,2),'-',substr(gameName,13,2)), '%Y-%m-%d')) as max_date
+			FROM	games
 			WHERE	type='R'
-			AND	substr(a.gameName,5,4) ="
+			AND	substr(gameName,5,4) ="
 	sqlString <- paste(sqlString,year)
 
 	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
