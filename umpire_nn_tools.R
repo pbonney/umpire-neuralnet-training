@@ -7,6 +7,23 @@ h.ind.max <- 5
 pcount.cut <- 1500
 h.gen <- 5
 
+# Gets the min and max date for regular season games in a given year.
+get.date.range.f <- function(year) {
+	sqlString <- 	"SELECT min(STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') as min_date,
+				max(STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') as max_date
+			FROM	game
+			WHERE	type='R'
+			AND	substr(a.gameName,5,4) ="
+	sqlString <- paste(sqlString,year)
+
+	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
+	rs <- dbSendQuery(mydb,sqlString)
+	dt <- fetch(rs,-1)
+	dbDisconnect(mydb)
+	
+	return(c(dt$min_date[1],dt$max_date[1]))
+}
+
 # Return a string with the SQL query for retrieving umpire training data.
 # If an id is specified the query will be for that specific umpire, otherwise it will be for all umpires.
 
@@ -41,7 +58,7 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
                         AND     p.pz is not null"
         if(id != -1) { sqlString <- paste(sqlString,"AND u.id=",id) }
 	if(stand %in% c('R','L')) { sqlString <- paste(sqlString,"AND a.stand=",stand) }
-	if(incl.spring) { sqlString <- paste(sqlString,"AND g.type IN ('R','S')" }
+	if(incl.spring) { sqlString <- paste(sqlString,"AND g.type IN ('R','S')") }
 	else 		{ sqlString <- paste(sqlString,"AND g.type='R'") }
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') >= '",d.s,"'",sep="")
@@ -73,7 +90,7 @@ ump.model.ind.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date(
 	h <- ifelse(dt > pcount.cut, h.ind.max, h.ind.min)
 
 	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE))
-	if (class(m)) == "try-error") { return(FALSE) }
+	if (class(m) == "try-error") { return(FALSE) }
 
 	return(m)
 }
