@@ -74,7 +74,7 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
 #	pitch.limit: max number of pitches to use for training; will use most recent pitches regardless. default is 5000
 #	incl.spring: include spring training results in training data? default is "FALSE"
 # Function returns "FALSE" if model fails to converge, returns nn model otherwise.
-ump.model.ind.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
+ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
 			    stand = "", pitch.limit = 5000, incl.spring = FALSE) {
 	sqlString <- ump.training.data.query(id=id,d.s=d.s,d.e=d.e,stand=stand,pitch.limit=pitch.limit,incl.spring=incl.spring)
 
@@ -93,4 +93,21 @@ ump.model.ind.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date(
 	if (class(m) == "try-error") { return(FALSE) }
 
 	return(m)
+}
+
+# Saves umpire strike zone model to disk.
+#
+# Fields:
+#	m.t: an object of type nn (from neuralnet package)
+#	id: GameDay umpire id
+#	d.s: start of date range (inclusive)
+#	d.e: end of date range (exclusive)
+#	stand: batter hand
+#	dir (optional): path in which to save file; default is to save to R working directory
+ump.save.model.f <- function(m.t,id="",d.s,d.e,stand="B",dir = ".") {
+	prefix <- ifelse(id=="","generic",id)
+	file.name <- paste(prefix,format(d.s,"%y%m%d"),format(d.e,"%y%m%d"),stand,"rda",sep=".")
+	save.string <- paste(dir,file.name,sep="/")
+	save(m.t,file=save.string)
+	return(TRUE)
 }
