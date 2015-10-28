@@ -106,7 +106,7 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 #	dir (optional): path in which to save file; default is to save to R working directory
 ump.save.model.f <- function(m.t,id="",d.s,d.e,stand="B",dir = ".") {
 	prefix <- ifelse(id=="","generic",id)
-	file.name <- paste(prefix,format(d.s,"%y%m%d"),format(d.e,"%y%m%d"),stand,"rda",sep=".")
+	file.name <- paste(prefix,d.s,d.e,stand,"rda",sep=".")
 	save.string <- paste(dir,file.name,sep="/")
 	save(m.t,file=save.string)
 	return(TRUE)
