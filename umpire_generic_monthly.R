@@ -9,3 +9,4 @@ y.l <- min.y:max.y
 m.l <- mapply(get.date.range.f,y.l)
 dt.y <- data.table(year=y.l,min=m.l[1,],max=m.l[2,])
 
+dt.y$has.march.games <- ifelse(month(dt.y$min)<4,TRUE,FALSE)
