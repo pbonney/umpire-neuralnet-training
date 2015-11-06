@@ -7,6 +7,7 @@ h.ind.max <- 5
 pcount.cut <- 1500
 plimit.c <- 5000
 h.gen <- 5
+ump.mod.dir <- "models.umpire"
 
 # Gets the min and max date for regular season games in a given year.
 get.date.range.f <- function(year) {
@@ -104,9 +105,9 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 #	d.s: start of date range (inclusive)
 #	d.e: end of date range (exclusive)
 #	stand: batter hand
-#	dir (optional): path in which to save file; default is to save to R working directory
+#	dir (optional): path in which to save file; default is to save to [R working directory]/models.umpire/
 ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".") {
-	if(dir==".") { dir <- getwd() }
+	if(dir==".") { dir <- paste(getwd(),ump.mod.dir,sep="/") }
 	prefix <- ifelse(id==-1,"generic",id)
 	file.name <- paste(prefix,d.s,d.e,stand,"rda",sep=".")
 	save.string <- paste(dir,file.name,sep="/")
@@ -123,7 +124,7 @@ ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".") {
 #   stand (optional): batter hand
 #   pitch.limit (optional): maximum number of training pitches (default is plimit.c)
 #   incl.spring (optional): include spring training in training data? (default is FALSE)
-#   dir (optional): path in which to save file; default is to save to R working directory
+#   dir (optional): path in which to save file; default is to save to [R working directory]/models.umpire/
 ump.train.and.save.f <- function(id=-1,d.s,d.e,stand="B",pitch.limit=plimit.c,incl.spring=FALSE,dir=".") {
     model <- ump.train.model.f(id,d.s,d.e,stand,pitch.limit,incl.spring)
     save <- ump.save.model.f(model,id,d.s,d.e,stand,dir)
