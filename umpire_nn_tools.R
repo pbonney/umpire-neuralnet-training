@@ -5,6 +5,7 @@ library(neuralnet)
 h.ind.min <- 4
 h.ind.max <- 5
 pcount.cut <- 1500
+plimit.c <- 5000
 h.gen <- 5
 
 # Gets the min and max date for regular season games in a given year.
@@ -28,7 +29,7 @@ get.date.range.f <- function(year) {
 # If an id is specified the query will be for that specific umpire, otherwise it will be for all umpires.
 
 ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-01-02"),
-				stand = "", incl.spring = FALSE, pitch.limit=5000) {
+				stand = "", incl.spring = FALSE, pitch.limit=plimit.c) {
         sqlString <- "  SELECT  p.gamedayPitchID,
                                 concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) as date,
                                 a.stand,
@@ -57,7 +58,7 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
                         AND     p.px is not null
                         AND     p.pz is not null"
         if(id != -1) { sqlString <- paste(sqlString,"AND u.id=",id) }
-	if(stand %in% c('R','L')) { sqlString <- paste(sqlString,"AND a.stand=",stand) }
+	if(stand %in% c('R','L')) { sqlString <- paste(sqlString," AND a.stand='",stand,"' ",sep="") }
 	if(incl.spring) { sqlString <- paste(sqlString,"AND g.type IN ('R','S')") }
 	else 		{ sqlString <- paste(sqlString,"AND g.type='R'") }
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
@@ -71,11 +72,11 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
 #	d.s: start of date range (i.e. get data on or after this date)
 #	d.e: end of date range (i.e. get date before this date)
 #	stand: batter hand (L or R) (if unspecified it will use data for both hands)
-#	pitch.limit: max number of pitches to use for training; will use most recent pitches regardless. default is 5000
+#	pitch.limit: max number of pitches to use for training; will use most recent pitches regardless. default is plimit.c
 #	incl.spring: include spring training results in training data? default is "FALSE"
 # Function returns "FALSE" if model fails to converge, returns nn model otherwise.
 ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
-			    stand = "", pitch.limit = 5000, incl.spring = FALSE) {
+			    stand = "B", pitch.limit = plimit.c, incl.spring = FALSE) {
 	sqlString <- ump.training.data.query(id=id,d.s=d.s,d.e=d.e,stand=stand,pitch.limit=pitch.limit,incl.spring=incl.spring)
 
 	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
@@ -87,7 +88,7 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 	dt$s.f <- as.numeric(dt$des == "Called Strike")
 	pcount <- nrow(dt)
 
-	h <- ifelse(dt > pcount.cut, h.ind.max, h.ind.min)
+	h <- ifelse(pcount > pcount.cut, h.ind.max, h.ind.min)
 
 	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE))
 	if (class(m) == "try-error") { return(FALSE) }
@@ -104,11 +105,27 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 #	d.e: end of date range (exclusive)
 #	stand: batter hand
 #	dir (optional): path in which to save file; default is to save to R working directory
-ump.save.model.f <- function(m.t,id="",d.s,d.e,stand="B",dir = ".") {
+ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".") {
 	if(dir==".") { dir <- getwd() }
-	prefix <- ifelse(id=="","generic",id)
+	prefix <- ifelse(id==-1,"generic",id)
 	file.name <- paste(prefix,d.s,d.e,stand,"rda",sep=".")
 	save.string <- paste(dir,file.name,sep="/")
 	save(m.t,file=save.string)
-	return(TRUE)
+	return(save.string)
+}
+
+# Wrapper function to train and save a strike zone model
+#
+# Fields:
+#   id (optional): GameDay umpire id
+#   d.s: start of date range (inclusive)
+#   d.e: end of date range (exclusive)
+#   stand (optional): batter hand
+#   pitch.limit (optional): maximum number of training pitches (default is plimit.c)
+#   incl.spring (optional): include spring training in training data? (default is FALSE)
+#   dir (optional): path in which to save file; default is to save to R working directory
+ump.train.and.save.f <- function(id=-1,d.s,d.e,stand="B",pitch.limit=plimit.c,incl.spring=FALSE,dir=".") {
+    model <- ump.train.model.f(id,d.s,d.e,stand,pitch.limit,incl.spring)
+    save <- ump.save.model.f(model,id,d.s,d.e,stand,dir)
+    return(save)
 }
