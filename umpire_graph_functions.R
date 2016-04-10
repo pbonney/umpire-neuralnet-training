@@ -15,8 +15,8 @@ rm(grid.bat)
 g.height <- 4
 g.width <- 5
 
-filepath <- "~/Documents/baseball/analysis/umpires/old/models/"
-bat.path <- "~/Documents/baseball/analysis/umpires/old/batter.models/"
+ump.path <- "./umpire_graphs/"
+bat.path <- "./batter_graphs/"
 
 #THT theme setup
 fontsize.title = 14
@@ -34,7 +34,7 @@ THT_Theme = theme(text = element_text(family='Lato'),
 
 load.zone <- function(id.t,year.t,month.t,stand.t) {
 	filename <- paste("nn",stand.t,id.t,year.t,month.t,"rda",sep=".")
-	load(paste(filepath,filename,sep=""))
+	load(paste(ump.path,filename,sep=""))
 	ifelse(stand.t=="R",nn.x<-m.r,nn.x<-m.l)
 	return(nn.x)
 }
@@ -46,7 +46,7 @@ plot.zone.helper <- function(nn.t, filename.t) {
         g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio") 
         g <- g + scale_fill_gradient(low="white",high="black")
         g <- g + THT_Theme
-        ggsave(g,file=paste(filepath,filename.t,sep=""),height=g.height,width=g.width)
+        ggsave(g,file=paste(ump.path,filename.t,sep=""),height=g.height,width=g.width)
 	return(TRUE)
 }
 	
@@ -58,7 +58,7 @@ plot.zone <- function(id.t,year.t,month.t,stand.t) {
 }
 
 plot.nn.helper <- function(nn.t, filename.t) {
-	png(paste(filepath,filename.t,sep=""))
+	png(paste(ump.path,filename.t,sep=""))
 	plot(nn.t)
 	dev.off()
 	return(TRUE)
