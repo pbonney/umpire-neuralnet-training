@@ -32,10 +32,10 @@ THT_Theme = theme(text = element_text(family='Lato'),
                  title = element_text(family='Lato', face='bold', hjust=.5, vjust=3, lineheight=100,size=fontsize.title))
 
 
-load.zone <- function(id.t,year.t,month.t,stand.t) {
-	filename <- paste("nn",stand.t,id.t,year.t,month.t,"rda",sep=".")
+load.zone <- function(id.t,start.t,end.t,stand.t) {
+	filename <- paste(id.t,start.t,end.t,stand.t,"rda",sep=".")
 	load(paste(ump.path,filename,sep=""))
-	ifelse(stand.t=="R",nn.x<-m.r,nn.x<-m.l)
+    nn.x <- m
 	return(nn.x)
 }
 
@@ -50,9 +50,9 @@ plot.zone.helper <- function(nn.t, filename.t) {
 	return(TRUE)
 }
 	
-plot.zone <- function(id.t,year.t,month.t,stand.t) {
-	m <- load.zone(id.t,year.t,month.t,stand.t)
-        filename.z <- paste("z",id.t,year.t,month.t,stand.t,"png",sep=".")
+plot.zone <- function(id.t,start.t,end.t,stand.t) {
+	m <- load.zone(id.t,start.t,end.t,stand.t)
+        filename.z <- paste("z",id.t,start.t,end.t,stand.t,"png",sep=".")
 	result <- plot.zone.helper(m,filename.z)
 	return(result)
 }
@@ -64,10 +64,10 @@ plot.nn.helper <- function(nn.t, filename.t) {
 	return(TRUE)
 }
 
-plot.zone.and.nn <- function(id.t,year.t,month.t,stand.t) {
-	m.t <- load.zone(id.t,year.t,month.t,stand.t)
-	result.z <- plot.zone.helper(m.t,paste("z",id.t,year.t,month.t,stand.t,"png",sep="."))
-	result.p <- plot.nn.helper(m.t,paste("p",id.t,year.t,month.t,stand.t,"png",sep="."))
+plot.zone.and.nn <- function(id.t,start.t,end.t,stand.t) {
+	m.t <- load.zone(id.t,start.t,end.t,stand.t)
+	result.z <- plot.zone.helper(m.t,paste("z",id.t,start.t,end.t,stand.t,"png",sep="."))
+	result.p <- plot.nn.helper(m.t,paste("p",id.t,start.t,end.t,stand.t,"png",sep="."))
 	return(result.z & result.p)
 }
 
@@ -96,8 +96,8 @@ plot.zone.and.nn.bat <- function(batter.t,year.t) {
 
 plot.all.nn <- function(file) {
     df.nn <- read.table(file)
-    dt.nn <- unique(data.table(id=df.nn$V2,year=df.nn$V3,month=df.nn$V4,stand=df.nn$V5))
-    mapply(plot.zone,dt.nn$id,dt.nn$year,dt.nn$month,dt.nn$stand)
+    dt.nn <- unique(data.table(id=df.nn$V1,start=df.nn$V2,end=df.nn$V3,stand=df.nn$V4))
+    mapply(plot.zone,dt.nn$id,dt.nn$start,dt.nn$end,dt.nn$stand)
     return(TRUE)
 }
 
