@@ -1,3 +1,5 @@
+#!/opt/local/bin/Rscript
+
 library(neuralnet)
 library(parallel)
 library(data.table)
