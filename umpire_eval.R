@@ -136,6 +136,7 @@ ucs.db.write.f <- function(dt.out.t) {
     return(result)
 }
 
-dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
-        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+dt.ucs$ucs <- mapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year)
+# dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
+#        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
 
