@@ -76,8 +76,8 @@ ump.eval.year.generic.f <- function(id, year) {
     start   <- paste(year,"01","01",sep="-")
     end     <- paste(year,"12","31",sep="-")
 
-    m.r.name <- paste("./models/generic",start,end,"R","rda",sep=".")
-    m.l.name <- paste("./models/generic",start,end,"L","rda",sep=".")
+    m.r.name <- paste("./models.umpire/generic",start,end,"R","rda",sep=".")
+    m.l.name <- paste("./models.umpire/generic",start,end,"L","rda",sep=".")
 
     if(file.exists(m.r.name)) {
         load(file=m.r.name)
