@@ -117,7 +117,7 @@ ump.eval.year.generic.f <- function(id, year) {
 
     db.result <- NULL
     if(!is.null(dt.o)) {
-        dt.out <- data.table(gamedayPitchID=dt.o$gamedayPitchID,umpire=dt.o$id,date=dt.o$date,p=dt.o$p,ucs=dt.o$ucs)
+        dt.out <- data.table(gamedayPitchID=dt.o$gamedayPitchID,umpire=dt.o$id,date=dt.o$date,p=dt.o$p,ucs=dt.o$ucs,c=dt.o$s.f)
         db.result <- ucs.db.write.f(dt.out)
     }
     return(db.result)
