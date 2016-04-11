@@ -37,7 +37,7 @@ THT_Theme = theme(text = element_text(family='Lato'),
 load.zone <- function(id.t,start.t,end.t,stand.t) {
 	filename <- paste(id.t,start.t,end.t,stand.t,"rda",sep=".")
 	load(paste(ump.in,filename,sep=""))
-    nn.x <- m
+    nn.x <- m.t
 	return(nn.x)
 }
 
