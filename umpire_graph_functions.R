@@ -47,6 +47,7 @@ plot.zone.helper <- function(nn.t, filename.t) {
         g <- ggplot(coords,aes(x,y))
         g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio") 
         g <- g + scale_fill_gradient(low="white",high="black")
+        g <- g + ggtitle(filename.t)
         g <- g + THT_Theme
         ggsave(g,file=paste(ump.out,filename.t,sep=""),height=g.height,width=g.width)
 	return(TRUE)
