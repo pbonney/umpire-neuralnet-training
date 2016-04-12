@@ -21,8 +21,8 @@ ump.out <- "./umpire_graphs/"
 bat.out <- "./batter_graphs/"
 
 #THT theme setup
-fontsize.title = 14
-fontsize = 12
+fontsize.title = 12
+fontsize = 10
 THT_Theme = theme(text = element_text(family='Lato'),
 #                 panel.background = element_rect(fill = "white", color='#BFBFBF'), 
                  plot.margin = unit(c(50,50,50,50),"points"),
@@ -41,13 +41,13 @@ load.zone <- function(id.t,start.t,end.t,stand.t) {
 	return(nn.x)
 }
 
-plot.zone.helper <- function(nn.t, filename.t) {
+plot.zone.helper <- function(nn.t, filename.t, title.t="") {
         coords <- data.frame(x=grid$x,y=grid$y)
         coords$p <- compute(nn.t,data.frame(px=coords$x,pz.ratio=coords$y))$net.result
         g <- ggplot(coords,aes(x,y))
         g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio") 
         g <- g + scale_fill_gradient(low="white",high="black")
-        g <- g + ggtitle(filename.t)
+        g <- g + ggtitle(title.t)
         g <- g + THT_Theme
         ggsave(g,file=paste(ump.out,filename.t,sep=""),height=g.height,width=g.width)
 	return(TRUE)
@@ -56,7 +56,8 @@ plot.zone.helper <- function(nn.t, filename.t) {
 plot.zone <- function(id.t,start.t,end.t,stand.t) {
 	m <- load.zone(id.t,start.t,end.t,stand.t)
         filename.z <- paste("z",id.t,start.t,end.t,stand.t,"png",sep=".")
-	result <- plot.zone.helper(m,filename.z)
+    title <- paste(id.t,paste(stand.t,"HB",sep=""),paste(start.t,"to",end.t),sep=", ")
+	result <- plot.zone.helper(m,filename.z,title.t=title)
 	return(result)
 }
 
@@ -69,6 +70,7 @@ plot.nn.helper <- function(nn.t, filename.t) {
 
 plot.zone.and.nn <- function(id.t,start.t,end.t,stand.t) {
 	m.t <- load.zone(id.t,start.t,end.t,stand.t)
+    title <- paste(id.t,paste(stand.t,"HB",sep=""),start.t,"to",end.t)
 	result.z <- plot.zone.helper(m.t,paste("z",id.t,start.t,end.t,stand.t,"png",sep="."))
 	result.p <- plot.nn.helper(m.t,paste("p",id.t,start.t,end.t,stand.t,"png",sep="."))
 	return(result.z & result.p)
