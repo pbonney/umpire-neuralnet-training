@@ -1,4 +1,5 @@
 library(data.table)
+library(RMySQL)
 
 x1 <- seq(-2,2,by=0.025)
 z1 <- seq(-2,2,by=0.025)
@@ -46,7 +47,7 @@ pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-
         else        { sqlString <- paste(sqlString,"AND g.type='R'") }
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') >= '",d.s,"'",sep="")
-        sqlString <- paste(sqlString,"ORDER BY concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) DESC, p.gamedayPitchID DESC LIMIT",pitch.limit)
+        sqlString <- paste(sqlString,"ORDER BY concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) DESC, p.gamedayPitchID DESC")
 }
 
 # Function to calculate the are of the 50%+ strike zone by Jon Roegle's method
