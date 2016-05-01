@@ -62,15 +62,14 @@ sz.area.roegle.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date
     dt <- fetch(rs,-1)
     dbDisconnect(mydb)
 
+    dt$n <- 1
     dt$s.f <- as.numeric(dt$des == "Called Strike")
     dt$grid.x <- floor(dt$px*12)
     dt$grid.z <- floor(dt$pz*12)
 
-    dt.grid2$count <- nrow(dt[dt$grid.x==dt.grid2$x & dt$grid.z==dt.grid2$z,])
-    dt.grid2$strike <- nrow(dt[dt$grid.x==dt.grid2$x & dt$grid.z==dt.grid2$z & dt$s.f==1,])
-
-    dt.grid2$ratio <- dt.grid2$strike/dt.grid2$count
-    area <- nrow(dt.grid2[dt.grid2$ratio>0.5,])
+    dt.agg <- aggregate(cbind(n,s.f) ~ grid.x + grid.z, data = dt, sum)
+    dt.agg$ratio <- dt.agg$s.f/dt.agg$n
+    area <- nrow(dt.agg[dt.agg$ratio>=0.5,])
 
     return(area)
 }
