@@ -41,6 +41,13 @@ load.zone <- function(id.t,start.t,end.t,stand.t) {
 	return(nn.x)
 }
 
+load.bat.zone <- function(batter.t, year.t) {
+	filename <- paste("nn.bat",batter.t,year.t,"rda",sep=".")
+	load(paste(bat.in,filename,sep=""))
+    nn.x <- m.bat
+	return(nn.x)
+}
+
 plot.zone.helper <- function(nn.t, filename.t, title.t="") {
         coords <- data.frame(x=grid$x,y=grid$y)
         coords$p <- compute(nn.t,data.frame(px=coords$x,pz.ratio=coords$y))$net.result
@@ -80,7 +87,10 @@ plot.zone.helper.bat <- function(nn.t, filename.t) {
         coords <- dt.grid
         coords$p <- compute(nn.t,data.frame(px=coords$x,pz=coords$z))$net.result
         g <- ggplot(coords,aes(x,z))
-        g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio") + scale_fill_grey()
+        g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio") 
+        g <- g + scale_fill_gradient(low="white",high="black")
+        g <- g + ggtitle(filename.t)
+        g <- g + THT_Theme
         ggsave(g,file=paste(bat.path,filename.t,sep=""),height=g.height,width=g.width)
 	return(TRUE)
 }

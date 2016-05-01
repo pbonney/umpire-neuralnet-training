@@ -7,7 +7,7 @@ library(RMySQL)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-year <- ifelse(length(args)>0, args[1], 2016)
+year <- ifelse(length(args)>0, args[1], 2012)
 
 eval.dbtable <- "umpire_ucs_generic"
 
@@ -117,7 +117,7 @@ ump.eval.year.generic.f <- function(id, year) {
 
     db.result <- NULL
     if(!is.null(dt.o)) {
-        dt.out <- data.table(gamedayPitchID=dt.o$gamedayPitchID,umpire=dt.o$id,date=dt.o$date,p=dt.o$p,ucs=dt.o$ucs,c=dt.o$s.f)
+        dt.out <- data.table(gamedayPitchID=dt.o$gamedayPitchID,umpire=dt.o$id,date=dt.o$date,p=dt.o$p,ucs=dt.o$ucs,c=dt.o$s.f,stand=dt.o$stand)
         db.result <- ucs.db.write.f(dt.out)
     }
     return(db.result)
@@ -126,7 +126,7 @@ ump.eval.year.generic.f <- function(id, year) {
 ucs.db.write.f <- function(dt.out.t) {
     result  <- FALSE
     mydb    <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
-    fields.l <- list(gamedayPitchID="int",umpire="int",date="date",p="double",ucs="double")
+    fields.l <- list(gamedayPitchID="int",umpire="int",date="date",p="double",ucs="double",c="smallint",stand="varchar")
 
     p.try   <- try(dbWriteTable(mydb,eval.dbtable,dt.out.t,field.types=fields.l,overwrite=FALSE,append=TRUE,row.names=FALSE))
     if (class(p.try) != "try-error") {
@@ -137,7 +137,7 @@ ucs.db.write.f <- function(dt.out.t) {
     return(result)
 }
 
-dt.ucs$ucs <- mapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year)
-# dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
-#        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+# dt.ucs$ucs <- mapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year)
+dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
+       mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
 

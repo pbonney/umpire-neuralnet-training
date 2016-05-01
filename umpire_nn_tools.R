@@ -91,7 +91,7 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 
 	h <- ifelse(pcount > pcount.cut, h.ind.max, h.ind.min)
 
-	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE))
+	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE,stepmax=10*plimit.c))
 	if (class(m) == "try-error") { return(FALSE) }
 
 	return(m)

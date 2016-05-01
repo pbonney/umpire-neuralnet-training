@@ -1,5 +1,6 @@
 USE gameday;
-SELECT  u.id,
+SELECT  year(uu.date),
+        u.id,
         uu.stand,
         count(*) as n,
         sum(uu.c-uu.p) as x,
@@ -8,4 +9,4 @@ SELECT  u.id,
 FROM    umpire_ucs_generic uu, 
         (select id,name from umpires where name!="" group by 1) as u 
 WHERE   u.id=uu.umpire 
-GROUP BY 1,2;
+GROUP BY 1,2,3;

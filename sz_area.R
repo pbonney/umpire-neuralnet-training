@@ -88,7 +88,7 @@ roegele.all.years.f <- function(min.year=2008, max.year=2016) {
     dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
         mc.cores=getOption("mc.cores", 20L))
 
-    dt.return <- data.table(year=dt$year, area=dt$area, stand=dt$stand)
+    dt.return <- data.table(year=dt$year, stand=dt$stand, area=dt$area)
 
     return(dt.return)
 }
@@ -116,13 +116,13 @@ area.adjustment.f <- function(year,stand) {
                     and     a.num=p.gameAtBatID
                     and     a.batter=z.batter
                     and     substr(a.gameName,5,4)=z.year
-                    and     (p.des like "Called%" or p.des like "Ball%")"
+                    and     (p.des like 'Called%' or p.des like 'Ball%')"
     sqlstring <- paste(sqlstring," and z.year=",year,sep="")
     sqlstring <- paste(sqlstring," and a.stand='",stand,"'",sep="")
     sqlstring <- paste(sqlstring," group by 1,2;",sep="")
 
     mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
-    rs <- dbSendQuery(mydb,sqlString)
+    rs <- dbSendQuery(mydb,sqlstring)
     dt <- fetch(rs,-1)
     dbDisconnect(mydb)
 
@@ -152,7 +152,7 @@ area.all.years.f <- function(min.year=2008, max.year=2016) {
     # (multiply by 144 for square inches)
     dt$area <- dt$unadjusted * by.c * by.c * dt$height/2 * 144
 
-    dt.return <- data.table(year=dt$year, area=dt$area, stand=dt$stand)
+    dt.return <- data.table(year=dt$year, stand=dt$stand, area=dt$area)
 
     return(dt.return)
 }
