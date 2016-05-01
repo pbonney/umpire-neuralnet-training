@@ -53,7 +53,7 @@ pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-
 # Function to calculate the are of the 50%+ strike zone by Jon Roegle's method
 # (which is to split the home plate area up into 1 inch squares and count up
 # how many of them had pitches called a strike > 50% of the time)
-sz.area.roegle.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
+sz.area.roegele.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
                 stand = "B", incl.spring = FALSE) {
     sqlString <- pitch.query(id=id,d.s=d.s,d.e=d.e,stand=stand,incl.spring=incl.spring)
 
@@ -69,7 +69,21 @@ sz.area.roegle.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date
 
     dt.agg <- aggregate(cbind(n,s.f) ~ grid.x + grid.z, data = dt, sum)
     dt.agg$ratio <- dt.agg$s.f/dt.agg$n
-    area <- nrow(dt.agg[dt.agg$ratio>=0.5,])
+    area <- nrow(dt.agg[dt.agg$ratio>0.5,])
 
     return(area)
+}
+
+area.all.years.f <- function(min.year=2008, max.year=2016) {
+    y.l <- seq(min.year, max.year)
+    dt <- data.table(year=y.l)
+    dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
+    dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
+    
+    dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e,
+        mc.cores=getOption("mc.cores", 10L))
+
+    dt.return <- data.table(year=dt$year, area=dt$area)
+
+    return(dt.return)
 }
