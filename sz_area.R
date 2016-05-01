@@ -1,3 +1,5 @@
+library(data.table)
+
 x1 <- seq(-2,2,by=0.025)
 z1 <- seq(-2,2,by=0.025)
 x2 <- seq(-24,24,by=1)
@@ -52,7 +54,7 @@ pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-
 # how many of them had pitches called a strike > 50% of the time)
 sz.area.roegle.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
                 stand = "B", incl.spring = FALSE) {
-    sqlString <- ump.training.data.query(id=id,d.s=d.s,d.e=d.e,stand=stand,incl.spring=incl.spring)
+    sqlString <- pitch.query(id=id,d.s=d.s,d.e=d.e,stand=stand,incl.spring=incl.spring)
 
     mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
     rs <- dbSendQuery(mydb,sqlString)
