@@ -1,5 +1,6 @@
 library(data.table)
 library(RMySQL)
+library(parallel)
 
 x1 <- seq(-2,2,by=0.025)
 z1 <- seq(-2,2,by=0.025)
