@@ -82,10 +82,10 @@ area.all.years.f <- function(min.year=2008, max.year=2016) {
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
     
-    dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e,
+    dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
         mc.cores=getOption("mc.cores", 20L))
 
-    dt.return <- data.table(year=dt$year, area=dt$area)
+    dt.return <- data.table(year=dt$year, area=dt$area, stand=dt$stand)
 
     return(dt.return)
 }
