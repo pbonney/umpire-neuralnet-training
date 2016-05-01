@@ -42,6 +42,7 @@ pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-
                         AND     p.pz is not null"
         if(id != -1) { sqlString <- paste(sqlString,"AND u.id=",id) }
         if(stand %in% c('R','L')) { sqlString <- paste(sqlString," AND a.stand='",stand,"' ",sep="") }
+        else { sqlString <- paste(sqlString, "AND a.stand in ('R','L')") }
         if(incl.spring) { sqlString <- paste(sqlString,"AND g.type IN ('R','S')") }
         else        { sqlString <- paste(sqlString,"AND g.type='R'") }
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
