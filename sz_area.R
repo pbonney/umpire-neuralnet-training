@@ -77,7 +77,8 @@ area.all.years.f <- function(min.year=2008, max.year=2016) {
     y.l <- seq(min.year, max.year)
     dt.r <- data.table(year=y.l,stand="R")
     dt.l <- data.table(year=y.l,stand="L")
-    dt <- rbind(dt.r,dt.l)
+    dt.b <- data.table(year=y.l,stand="B")
+    dt <- rbind(dt.r,dt.l,dt.b)
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
     
