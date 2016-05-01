@@ -1,3 +1,5 @@
+library(data.table)
+
 x1 <- seq(-2,2,by=0.025)
 z1 <- seq(-2,2,by=0.025)
 x2 <- seq(-24,24,by=1)
