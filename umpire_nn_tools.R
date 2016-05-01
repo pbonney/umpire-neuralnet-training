@@ -5,7 +5,8 @@ library(neuralnet)
 h.ind.min <- 4
 h.ind.max <- 5
 pcount.cut <- 1500
-plimit.c <- 5000
+plimit.c <- 99999
+plimit.g <- 99999
 h.gen <- 5
 ump.mod.dir <- "models.umpire"
 
@@ -91,7 +92,7 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 
 	h <- ifelse(pcount > pcount.cut, h.ind.max, h.ind.min)
 
-	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE,stepmax=10*plimit.c))
+	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE,lifesign='full',threshold=max(0.01,pcount/100000)))
 	if (class(m) == "try-error") { return(FALSE) }
 
 	return(m)
