@@ -38,8 +38,6 @@ pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-
                         AND     substr(a.gameName,5,4)=b.year
                         AND     u.position='home'
                         AND     p.des in ('Ball','Ball In Dirt','Called Strike')
-                        AND     a.b_height_in is not null
-                        AND     a.b_height_in!=0
                         AND     p.px is not null
                         AND     p.pz is not null"
         if(id != -1) { sqlString <- paste(sqlString,"AND u.id=",id) }
@@ -77,7 +75,9 @@ sz.area.roegele.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 
 area.all.years.f <- function(min.year=2008, max.year=2016) {
     y.l <- seq(min.year, max.year)
-    dt <- data.table(year=y.l)
+    dt.r <- data.table(year=y.l,stand="R")
+    dt.l <- data.table(year=y.l,stand="L")
+    dt <- rbind(dt.r,dt.l)
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
     
