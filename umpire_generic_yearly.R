@@ -3,7 +3,7 @@ library(parallel)
 
 source("umpire_nn_tools.R")
 
-min.y <- 2007
+min.y <- 2015
 max.y <- 2016
 
 y.l <- min.y:max.y
@@ -22,7 +22,7 @@ wrapper.generic.yearly.f <- function(year) {
 #        stand=dt.t$stand,pitch.limit=99999)
 
     dt.t$path <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
-        stand=dt.t$stand,pitch.limit=25000,
+        stand=dt.t$stand,pitch.limit=99999,
         mc.cores=getOption("mc.cores",2L))
 
     return(dt.t$path)

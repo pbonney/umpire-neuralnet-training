@@ -7,7 +7,7 @@ library(RMySQL)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-year <- ifelse(length(args)>0, args[1], 2012)
+year <- ifelse(length(args)>0, args[1], 2016)
 
 eval.dbtable <- "umpire_ucs_generic"
 

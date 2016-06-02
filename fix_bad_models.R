@@ -54,7 +54,7 @@ fix.bad.models.f <- function(dir) {
     mapply(file.remove, dt.fix$file)
 
     dt.fix$fixed <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.fix$d.s),d.e=as.Date(dt.fix$d.e),
-        stand=dt.fix$stand,pitch.limit=25000,
+        stand=dt.fix$stand,pitch.limit=99999,
         mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
 
     return(dt.fix)
