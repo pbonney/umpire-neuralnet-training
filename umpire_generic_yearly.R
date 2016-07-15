@@ -10,7 +10,7 @@ y.l <- min.y:max.y
 
 wrapper.generic.yearly.f <- function(year) {
     start <- paste(year,"1-1",sep="-")
-    end <- paste(year,"12-31",sep="-")
+    end <- paste(year,"06-30",sep="-")
     dt.r <- data.table(d.s=start,d.e=end)
     dt.r$stand <- "R"
     dt.l <- data.table(d.s=start,d.e=end)
@@ -29,6 +29,6 @@ wrapper.generic.yearly.f <- function(year) {
 }
 
 # Test that it works
-# m.list <- wrapper.generic.yearly.f(2016)
-m.list <- mcmapply(wrapper.generic.yearly.f, y.l,
-    mc.cores=getOption("mc.cores",10L))
+m.list <- wrapper.generic.yearly.f(2016)
+# m.list <- mcmapply(wrapper.generic.yearly.f, y.l,
+#    mc.cores=getOption("mc.cores",10L))

@@ -11,4 +11,5 @@ SELECT  year(uu.date),
 FROM    umpire_ucs_generic uu, 
         (select id,name from umpires where name!="" group by 1) as u 
 WHERE   u.id=uu.umpire 
+AND     year(uu.date)=2016
 GROUP BY 1,2,3;

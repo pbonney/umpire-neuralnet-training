@@ -4,7 +4,7 @@ library(data.table)
 library(neuralnet)
 
 pcount.min.b <- 200
-pcount.max.g <- 2500
+pcount.max.g <- 99999
 batter.path <- "./models.batter/"
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -38,12 +38,13 @@ bat.model.f	<- function(id,year) {
 	dbDisconnect(mydb)
 	dt	<- data.table(df)
 
-	if(nrow(dt) < pcount.min.b) { return(FALSE) }
+    pcount <- nrow(dt)
+	if(pcount < pcount.min.b) { return(FALSE) }
 	
 	h.b <- 4
 
 	dt$s.f	<- as.numeric(dt$des %in% "Called Strike")
-	m.bat	<- try(neuralnet(s.f~px+pz,data=dt,hidden=h.b,linear.output=FALSE))
+	m.bat	<- try(neuralnet(s.f~px+pz,data=dt,hidden=h.b,linear.output=FALSE,threshold=max(0.01,pcount/100000)))
 	err	<- m.bat$result.matrix[1]
 	if(!is.numeric(err)) { return(FALSE) }
 	if(err==0) { return(FALSE) }
@@ -72,12 +73,13 @@ bat.model.generic.f <- function(year, stand) {
 	dbDisconnect(mydb)
 	dt	<- data.table(df)
 
-	if(nrow(dt) < pcount.min.b) { return(FALSE) }
+    pcount <- nrow(dt)
+	if(pcount < pcount.min.b) { return(FALSE) }
 	
 	h.b <- 4
 
 	dt$s.f	<- as.numeric(dt$des %in% "Called Strike")
-	m.bat	<- try(neuralnet(s.f~px+pz,data=dt,hidden=h.b,linear.output=FALSE))
+	m.bat	<- try(neuralnet(s.f~px+pz,data=dt,hidden=h.b,linear.output=FALSE,threshold=max(0.01,pcount/100000)))
 	err	<- m.bat$result.matrix[1]
 	if(!is.numeric(err)) { return(FALSE) }
 	if(err==0) { return(FALSE) }
@@ -89,6 +91,7 @@ bat.model.generic.f <- function(year, stand) {
 }
 
 max.year <- max(dt.batlist$year)
+min.year <- min(dt.batlist$year)
 
 if(max.year==min.year) {
     bat.model.generic.f(min.year,"L")
