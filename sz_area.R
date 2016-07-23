@@ -2,6 +2,7 @@ library(data.table)
 library(RMySQL)
 library(parallel)
 
+source("rogele_model.R")
 source("umpire_graph_functions.R")
 
 by.c <- 1/40
@@ -17,62 +18,18 @@ dt.grid2 <- data.table(x=grid2$x,z=grid2$z)
 rm(grid1)
 rm(grid2)
 
-pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-01-02"),
-                stand = "", incl.spring = FALSE) {
-        sqlString <- "  SELECT  u.id as umpire,
-                                p.gamedayPitchID,
-                                concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) as Date,
-                                a.stand,
-                                b.sz_top,
-                                b.sz_bot,
-                                p.px,
-                                p.pz,
-                                p.des
-                        FROM    umpires u,
-                                atbats a,
-                                pitches p,
-                                batter_sz_top_bot b,
-                                games g
-                        WHERE   u.gameName=p.gameName
-                        AND     u.gameName=g.gameName
-                        AND     p.gameName=a.gameName
-                        AND     a.num=p.gameAtBatId
-                        AND     a.batter=b.batter
-                        AND     substr(a.gameName,5,4)=b.year
-                        AND     u.position='home'
-                        AND     p.des in ('Ball','Ball In Dirt','Called Strike')
-                        AND     p.px is not null
-                        AND     p.pz is not null"
-        if(id != -1) { sqlString <- paste(sqlString,"AND u.id=",id) }
-        if(stand %in% c('R','L')) { sqlString <- paste(sqlString," AND a.stand='",stand,"' ",sep="") }
-        else { sqlString <- paste(sqlString, "AND a.stand in ('R','L')") }
-        if(incl.spring) { sqlString <- paste(sqlString,"AND g.type IN ('R','S')") }
-        else        { sqlString <- paste(sqlString,"AND g.type='R'") }
-        sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
-        sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') >= '",d.s,"'",sep="")
-        sqlString <- paste(sqlString,"ORDER BY concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) DESC, p.gamedayPitchID DESC")
-}
-
-# Function to calculate the are of the 50%+ strike zone by Jon Roegle's method
+# Function to calculate the area of the 50%+ strike zone by Jon Roegle's method
 # (which is to split the home plate area up into 1 inch squares and count up
 # how many of them had pitches called a strike > 50% of the time)
 sz.area.roegele.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
                 stand = "B", incl.spring = FALSE) {
-    sqlString <- pitch.query(id=id,d.s=d.s,d.e=d.e,stand=stand,incl.spring=incl.spring)
 
-    mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
-    rs <- dbSendQuery(mydb,sqlString)
-    dt <- fetch(rs,-1)
-    dbDisconnect(mydb)
+    # Build a model of the requested strike zone
+    dt.model <- sz.model.roegele.f(id, d.s, d.e, stand, incl.spring)
 
-    dt$n <- 1
-    dt$s.f <- as.numeric(dt$des == "Called Strike")
-    dt$grid.x <- floor(dt$px*12)
-    dt$grid.z <- floor(dt$pz*12)
-
-    dt.agg <- aggregate(cbind(n,s.f) ~ grid.x + grid.z, data = dt, sum)
-    dt.agg$ratio <- dt.agg$s.f/dt.agg$n
-    area <- nrow(dt.agg[dt.agg$ratio>0.5,])
+    # Compute the number of square-inch buckets where a pitch was called a strike
+    # more than 50% of the time, and call that the area of the zone (in square inches).
+    area <- nrow(dt.model[dt.model$ratio>0.5,])
 
     return(area)
 }
@@ -84,7 +41,7 @@ roegele.all.years.f <- function(min.year=2008, max.year=2016) {
     dt <- rbind(dt.r,dt.l)
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
-    
+
     dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
         mc.cores=getOption("mc.cores", 20L))
 
@@ -135,11 +92,11 @@ area.all.years.f <- function(min.year=2008, max.year=2016) {
 
     dt.r <- data.table(year=y.l,stand="R")
     dt.l <- data.table(year=y.l,stand="L")
-    
+
     dt <- rbind(dt.r,dt.l)
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
-    
+
     dt$unadjusted <- mcmapply(unadjusted.area.zone.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
         mc.cores=getOption("mc.cores", 20L))
 
