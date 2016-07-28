@@ -17,9 +17,9 @@ bat.path <- "./models.batter/"
 
 load.bat.zone <- function(batter.t,year.t) {
 	filename <- paste("nn.bat",batter.t,year.t,"rda",sep=".")
-	if(!file.exists(paste(bat.path,filename,sep=""))) { 
+	if(!file.exists(paste(bat.path,filename,sep=""))) {
         stand <- get.batter.hand.f(batter.t, year.t)
-        filename <- paste("nn.bat.generic",year.t,stand,"rda",sep=".") 
+        filename <- paste("nn.bat.generic",year.t,stand,"rda",sep=".")
     }
 	load(paste(bat.path,filename,sep=""))
 	nn.x <- m.bat
@@ -35,7 +35,7 @@ get.batter.hand.f <- function(batter.t, year.t) {
     rs <- dbSendQuery(mydb,sqlstring)
     dt <- fetch(rs,-1)
     dbDisconnect(mydb)
-    
+
     ab_max=max(dt$ab)
     hand=dt[dt$ab==ab_max,1]
     return(hand[1])
@@ -60,7 +60,7 @@ sz.top.bot.l <- list(1:nrow(dt.batlist))
 
 # # sz.top.bot.l <- mapply(batter.sz.top.bot,dt.batlist$id,year=dt.batlist$year)
 sz.top.bot.l <- mcmapply(batter.sz.top.bot,dt.batlist$id,dt.batlist$year,
-	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
 
 dt.batlist$sz.top <- as.numeric(sz.top.bot.l[1,])
 dt.batlist$sz.bot <- as.numeric(sz.top.bot.l[2,])

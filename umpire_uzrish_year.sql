@@ -1,4 +1,3 @@
-USE gameday;
 SELECT  year(uu.date),
         uu.stand,
         count(*) as n,

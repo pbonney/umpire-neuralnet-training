@@ -9,7 +9,7 @@ batter.path <- "./models.batter/"
 
 args <- commandArgs(trailingOnly = TRUE)
 
-min.year <- ifelse(length(args)>0, args[1], 2007)
+min.year <- ifelse(length(args)>0, args[1], 2016)
 
 sqlStringBatterList <- sqlImport("./batter_list.sql")
 mydb            <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
@@ -40,7 +40,7 @@ bat.model.f	<- function(id,year) {
 
     pcount <- nrow(dt)
 	if(pcount < pcount.min.b) { return(FALSE) }
-	
+
 	h.b <- 4
 
 	dt$s.f	<- as.numeric(dt$des %in% "Called Strike")
@@ -48,7 +48,7 @@ bat.model.f	<- function(id,year) {
 	err	<- m.bat$result.matrix[1]
 	if(!is.numeric(err)) { return(FALSE) }
 	if(err==0) { return(FALSE) }
-	
+
 	m.bat.name <- paste(batter.path,paste("nn.bat",id,year,"rda",sep="."),sep="")
 	save(m.bat,file=m.bat.name)
 
@@ -75,7 +75,7 @@ bat.model.generic.f <- function(year, stand) {
 
     pcount <- nrow(dt)
 	if(pcount < pcount.min.b) { return(FALSE) }
-	
+
 	h.b <- 4
 
 	dt$s.f	<- as.numeric(dt$des %in% "Called Strike")
@@ -83,7 +83,7 @@ bat.model.generic.f <- function(year, stand) {
 	err	<- m.bat$result.matrix[1]
 	if(!is.numeric(err)) { return(FALSE) }
 	if(err==0) { return(FALSE) }
-	
+
 	m.bat.name <- paste(paste(batter.path,"nn.bat.generic",sep=""),year,stand,"rda",sep=".")
 	save(m.bat,file=m.bat.name)
 
@@ -99,12 +99,12 @@ if(max.year==min.year) {
 } else {
     dt.generic <- data.table(year=c(min.year:max.year))
     dt.generic$result.L <- mcmapply(bat.model.generic.f,dt.generic$year,"L",
-	    mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+	    mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
     dt.generic$result.R <- mcmapply(bat.model.generic.f,dt.generic$year,"R",
-	    mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+	    mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
 }
 
 # bat.model.f(113028,2007)
 # dt.batlist$result <- mapply(bat.model.f,dt.batlist$id,dt.batlist$year)
 dt.batlist$result <- mcmapply(bat.model.f,dt.batlist$id,dt.batlist$year,
-	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)

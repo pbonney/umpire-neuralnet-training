@@ -10,7 +10,7 @@ y.l <- min.y:max.y
 
 wrapper.generic.yearly.f <- function(year) {
     start <- paste(year,"1-1",sep="-")
-    end <- paste(year,"06-30",sep="-")
+    end <- paste(year,"12-31",sep="-")
     dt.r <- data.table(d.s=start,d.e=end)
     dt.r$stand <- "R"
     dt.l <- data.table(d.s=start,d.e=end)

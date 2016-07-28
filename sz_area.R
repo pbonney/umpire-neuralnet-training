@@ -2,7 +2,7 @@ library(data.table)
 library(RMySQL)
 library(parallel)
 
-source("rogele_model.R")
+source("roegele_model.R")
 source("umpire_graph_functions.R")
 
 by.c <- 1/40

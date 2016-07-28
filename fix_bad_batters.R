@@ -24,7 +24,7 @@ try.model.f <- function(m.temp) {
     if (try(compute(m.temp,data.frame(px=2, pz=6))$net.result) > err.threshold) { return(FALSE) }
     if (try(compute(m.temp,data.frame(px=-2, pz=1))$net.result) > err.threshold) { return(FALSE) }
     if (try(compute(m.temp,data.frame(px=2, pz=1))$net.result) > err.threshold) { return(FALSE) }
-    
+
     return(TRUE)
 }
 
@@ -44,7 +44,7 @@ find.bad.models.f <- function(dir) {
     dt.result <- data.table(file=paste(dir,models.l,sep="/"))
 #    dt.result$test <- lapply(dt.result$file, try.model.wrapper.f)
     dt.result$test <- mcmapply(try.model.wrapper.f, dt.result$file,
-                               mc.cores=getOption("mc.cores",20L))
+                               mc.cores=getOption("mc.cores",12L))
     return(dt.result[dt.result$test==FALSE,])
 }
 
@@ -61,7 +61,7 @@ fix.bad.models.f <- function(dir) {
     mapply(file.remove, dt.fix$file)
 
     dt.fix$fixed <- mcmapply(bat.model.f,dt.fix$id,dt.fix$year,
-        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
 
     return(dt.fix)
 }
