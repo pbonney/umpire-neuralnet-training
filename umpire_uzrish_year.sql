@@ -1,4 +1,4 @@
-SELECT  year(uu.date),
+SELECT  year(uu.date) as year,
         uu.stand,
         count(*) as n,
         sum(uu.c) as cs,
