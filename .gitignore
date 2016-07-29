@@ -1,0 +1,8 @@
+.DS_Store
+.RData
+.Rhistory
+models.batter/
+models.umpire/
+old/
+umpire_graphs/
+umpire_uzr/
