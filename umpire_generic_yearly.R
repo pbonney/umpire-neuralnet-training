@@ -18,17 +18,17 @@ wrapper.generic.yearly.f <- function(year) {
 
     dt.t <- rbind(dt.r,dt.l)
 
-#    dt.t$path <- mapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
-#        stand=dt.t$stand,pitch.limit=99999)
+    dt.t$path <- mapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
+        stand=dt.t$stand,pitch.limit=99999)
 
-    dt.t$path <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
-        stand=dt.t$stand,pitch.limit=99999,
-        mc.cores=getOption("mc.cores",2L))
+    # dt.t$path <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
+    #     stand=dt.t$stand,pitch.limit=99999,
+    #     mc.cores=getOption("mc.cores",2L))
 
     return(dt.t$path)
 }
 
 # Test that it works
-m.list <- wrapper.generic.yearly.f(2016)
+m.list <- wrapper.generic.yearly.f(max.y)
 # m.list <- mcmapply(wrapper.generic.yearly.f, y.l,
 #    mc.cores=getOption("mc.cores",10L))

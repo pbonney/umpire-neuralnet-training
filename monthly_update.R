@@ -1,3 +1,5 @@
+message("Starting up R script")
+
 library(RMySQL)
 library(data.table)
 

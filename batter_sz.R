@@ -13,7 +13,7 @@ grid.b <- expand.grid(x=x,z=z)
 dt.grid <- data.table(x=grid.b$x,z=grid.b$z)
 rm(grid.b)
 
-bat.path <- "./models.batter/"
+bat.path <- "/users/peter/Documents/baseball/analysis/umpires/models.batter/"
 
 load.bat.zone <- function(batter.t,year.t) {
 	filename <- paste("nn.bat",batter.t,year.t,"rda",sep=".")
@@ -58,9 +58,9 @@ batter.sz.top.bot <- function(batter.t,year.t) {
 
 sz.top.bot.l <- list(1:nrow(dt.batlist))
 
-# # sz.top.bot.l <- mapply(batter.sz.top.bot,dt.batlist$id,year=dt.batlist$year)
-sz.top.bot.l <- mcmapply(batter.sz.top.bot,dt.batlist$id,dt.batlist$year,
-	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
+sz.top.bot.l <- mapply(batter.sz.top.bot,dt.batlist$id,year=dt.batlist$year)
+# sz.top.bot.l <- mcmapply(batter.sz.top.bot,dt.batlist$id,dt.batlist$year,
+# 	mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",8L),mc.cleanup=TRUE)
 
 dt.batlist$sz.top <- as.numeric(sz.top.bot.l[1,])
 dt.batlist$sz.bot <- as.numeric(sz.top.bot.l[2,])

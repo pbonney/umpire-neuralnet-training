@@ -42,8 +42,12 @@ roegele.all.years.f <- function(min.year=2008, max.year=2016) {
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
 
-    dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
-        mc.cores=getOption("mc.cores", 20L))
+    if(min.year<max.year) {
+      dt$area <- mcmapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
+          mc.cores=getOption("mc.cores", 20L))
+    } else {
+      dt$area <- mapply(sz.area.roegele.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand)
+    }
 
     dt.return <- data.table(year=dt$year, stand=dt$stand, area=dt$area)
 
@@ -97,11 +101,16 @@ area.all.years.f <- function(min.year=2008, max.year=2016) {
     dt$d.s <- as.Date(paste(dt$year,"01","01",sep="-"))
     dt$d.e <- as.Date(paste(dt$year,"12","31",sep="-"))
 
-    dt$unadjusted <- mcmapply(unadjusted.area.zone.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
-        mc.cores=getOption("mc.cores", 20L))
+    if(min.year<max.year) {
+      dt$unadjusted <- mcmapply(unadjusted.area.zone.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand,
+          mc.cores=getOption("mc.cores", 20L))
 
-    dt$height <- mcmapply(area.adjustment.f, dt$year, dt$stand,
-        mc.cores=getOption("mc.cores", 20L))
+      dt$height <- mcmapply(area.adjustment.f, dt$year, dt$stand,
+          mc.cores=getOption("mc.cores", 20L))
+    } else {
+      dt$unadjusted <- mapply(unadjusted.area.zone.f, d.s=dt$d.s, d.e=dt$d.e, stand=dt$stand)
+        dt$height <- mapply(area.adjustment.f, dt$year, dt$stand)
+    }
 
     # The vertical dimension of the zone is scaled such that +1 is at the top and -1 at the bottom
     # Thus the real-world height of each box, with scaled height by.c, is by.c * (sz_top-sz_bot)/2

@@ -61,7 +61,7 @@ fix.bad.models.f <- function(dir) {
     mapply(file.remove, dt.fix$file)
 
     dt.fix$fixed <- mcmapply(bat.model.f,dt.fix$id,dt.fix$year,
-        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",12L),mc.cleanup=TRUE)
+        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",4L),mc.cleanup=TRUE)
 
     return(dt.fix)
 }

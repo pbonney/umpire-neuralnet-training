@@ -128,7 +128,7 @@ ucs.db.write.f <- function(dt.out.t) {
     mydb    <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
     fields.l <- list(gamedayPitchID="int",umpire="int",date="date",p="double",ucs="double",c="smallint",stand="varchar")
 
-    # 
+    #
     # Note: need to delete entries from this table first
     #
     p.try   <- try(dbWriteTable(mydb,eval.dbtable,dt.out.t,field.types=fields.l,overwrite=FALSE,append=TRUE,row.names=FALSE))
@@ -140,7 +140,6 @@ ucs.db.write.f <- function(dt.out.t) {
     return(result)
 }
 
-# dt.ucs$ucs <- mapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year)
-dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
-       mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
-
+dt.ucs$ucs <- mapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year)
+# dt.ucs$ucs  <- mcmapply(ump.eval.year.generic.f,dt.ucs$id,dt.ucs$year,
+#        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
