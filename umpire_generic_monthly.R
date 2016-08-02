@@ -11,7 +11,7 @@ m.l <- mapply(get.date.range.f,y.l)
 dt.y <- data.table(year=y.l,min=m.l[1,],max=m.l[2,])
 
 dt.y$has.mar.games <- ifelse(month(dt.y$min)<4,TRUE,FALSE)
-dt.y$has.oct.games <- ifelse(month(dt.y$min)>9,TRUE,FALSE)
+dt.y$has.oct.games <- ifelse(month(dt.y$max)>9,TRUE,FALSE)
 
 month.first.day.list.f <- function(year,min.date,has.mar.games,has.oct.games) {
     s1.l <- ifelse(has.mar.games,
