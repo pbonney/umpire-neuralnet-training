@@ -1,6 +1,7 @@
 library(RMySQL)
 library(data.table)
 library(neuralnet)
+source("gameday_date_functions.R")
 
 h.ind.min <- 4
 h.ind.max <- 5
@@ -9,23 +10,6 @@ plimit.c <- 99999
 plimit.g <- 99999
 h.gen <- 5
 ump.mod.dir <- "models.umpire"
-
-# Gets the min and max date for regular season games in a given year.
-get.date.range.f <- function(year) {
-	sqlString <- 	"SELECT min(STR_TO_DATE(concat(substr(gameName,5,4),'-',substr(gameName,10,2),'-',substr(gameName,13,2)), '%Y-%m-%d')) as min_date,
-				max(STR_TO_DATE(concat(substr(gameName,5,4),'-',substr(gameName,10,2),'-',substr(gameName,13,2)), '%Y-%m-%d')) as max_date
-			FROM	games
-			WHERE	type='R'
-			AND	substr(gameName,5,4) ="
-	sqlString <- paste(sqlString,year)
-
-	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
-	rs <- dbSendQuery(mydb,sqlString)
-	dt <- fetch(rs,-1)
-	dbDisconnect(mydb)
-	
-	return(c(dt$min_date[1],dt$max_date[1]))
-}
 
 # Return a string with the SQL query for retrieving umpire training data.
 # If an id is specified the query will be for that specific umpire, otherwise it will be for all umpires.

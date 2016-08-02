@@ -1,6 +1,8 @@
 library(data.table)
 library(RMySQL)
 
+ump.mod.dir <- "models.umpire"
+
 pitch.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as.Date("2006-01-02"),
                 stand = "", incl.spring = FALSE) {
         sqlString <- "  SELECT  u.id as umpire,
@@ -87,4 +89,31 @@ eval.roegele.f <- function(dt.mod, px, pz) {
 
   # No matching rows, return 0
   return(0)
+}
+
+# Save a given Roegele-based strike zone model for later use
+save.model.roegele.f <- function(dt.mod,id=-1,d.s,d.e,stand="B",dir = ".") {
+	if(dir==".") {
+    dir <- paste(getwd(),ump.mod.dir,sep="/")
+  }
+	prefix <- paste("roeg",ifelse(id==-1,"generic",id),sep=".")
+	file.name <- paste(prefix,d.s,d.e,stand,"rda",sep=".")
+	save.string <- paste(dir,file.name,sep="/")
+	save(dt.mod,file=save.string)
+	return(save.string)
+}
+
+# Wrapper function to train and save a Roegele-based strike zone model
+#
+# Fields:
+#   id (optional): GameDay umpire id
+#   d.s: start of date range (inclusive)
+#   d.e: end of date range (exclusive)
+#   stand (optional): batter hand
+#   incl.spring (optional): include spring training in training data? (default is FALSE)
+#   dir (optional): path in which to save file; default is to save to [R working directory]/models.umpire/
+roeg.train.and.save.f <- function(id=-1,d.s,d.e,stand="B",incl.spring=FALSE,dir=".") {
+    model <- sz.model.roegele.f(id,d.s,d.e,stand,incl.spring)
+    save <- save.model.roegele.f(model,id,d.s,d.e,stand,dir)
+    return(save)
 }
