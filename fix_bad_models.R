@@ -31,31 +31,53 @@ try.model.wrapper.f <- function(filepath) {
 }
 
 find.bad.models.f <- function(dir) {
-    models.l <- dir(path=dir, pattern="*rda")
-    dt.result <- data.table(file=paste(dir,models.l,sep="/"))
-    dt.result$test <- lapply(dt.result$file, try.model.wrapper.f)
-#    dt.result$test <- mcmapply(try.model.wrapper.f, dt.result$file,
-#                               mc.cores=getOption("mc.cores",20L))
-    return(dt.result[dt.result$test==FALSE,])
+  models.l <- dir(path=dir, pattern="*rda")
+  dt.result <- data.table(file=paste(dir,models.l,sep="/"))
+  dt.result$test <- mapply(dt.result$file, try.model.wrapper.f)
+  return(dt.result[dt.result$test==FALSE,])
+}
+
+find.bad.ump.models.parallel.f <- function(dir) {
+  models.l <- dir(path=dir, pattern="*rda")
+  dt.result <- data.table(file=paste(dir,models.l,sep="/"))
+  dt.result$test <- lapply(dt.result$file, try.model.wrapper.f)
+  dt.result$test <- mcmapply(try.model.wrapper.f, dt.result$file,
+    mc.cores=getOption("mc.cores",20L))
+  return(dt.result[dt.result$test==FALSE,])
 }
 
 fix.bad.models.f <- function(dir) {
-    dt.fix <- find.bad.models.f(dir)
-    n <- nchar(dir) + nchar("/generic.") + 1
-    k <- n + 9 # n to n+9 for start date
-    l <- k + 2 # move over 2 for next date
-    m <- l + 9 # l to l+3 for end date
-    c <- m + 2 # move over 2 for batter hand
-    dt.fix$d.s <- as.Date(substr(dt.fix$file,n,k))
-    dt.fix$d.e <- as.Date(substr(dt.fix$file,l,m))
-    dt.fix$stand <- substr(dt.fix$file,c,c)
+  dt <- fix.bad.models.helper.f(dir, FALSE)
+  return(dt)
+}
 
-    # remove bad models
-    mapply(file.remove, dt.fix$file)
+fix.bad.models.parallel.f <- function(dir) {
+  dt <- fix.bad.models.helper.f(dir, TRUE)
+  return(dt)
+}
 
+fix.bad.models.helper.f <- function(dir, parallel) {
+  dt.fix <- find.bad.models.f(dir)
+  n <- nchar(dir) + nchar("/generic.") + 1
+  k <- n + 9 # n to n+9 for start date
+  l <- k + 2 # move over 2 for next date
+  m <- l + 9 # l to l+3 for end date
+  c <- m + 2 # move over 2 for batter hand
+  dt.fix$d.s <- as.Date(substr(dt.fix$file,n,k))
+  dt.fix$d.e <- as.Date(substr(dt.fix$file,l,m))
+  dt.fix$stand <- substr(dt.fix$file,c,c)
+
+  # remove bad models
+  mapply(file.remove, dt.fix$file)
+
+  if(parallel) {
     dt.fix$fixed <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.fix$d.s),d.e=as.Date(dt.fix$d.e),
-        stand=dt.fix$stand,pitch.limit=99999,
-        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",2L),mc.cleanup=TRUE)
+      stand=dt.fix$stand,pitch.limit=99999,
+      mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+  } else {
+    dt.fix$fixed <- mapply(ump.train.and.save.f,d.s=as.Date(dt.fix$d.s),d.e=as.Date(dt.fix$d.e),
+      stand=dt.fix$stand,pitch.limit=99999)
+  }
 
-    return(dt.fix)
+  return(dt.fix)
 }

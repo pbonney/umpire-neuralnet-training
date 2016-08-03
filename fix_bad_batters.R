@@ -39,7 +39,7 @@ try.model.wrapper.f <- function(filepath) {
     return(result)
 }
 
-find.bad.models.f <- function(dir) {
+find.bad.batters.f <- function(dir) {
     models.l <- dir(path=dir, pattern="*rda")
     dt.result <- data.table(file=paste(dir,models.l,sep="/"))
 #    dt.result$test <- lapply(dt.result$file, try.model.wrapper.f)
@@ -48,20 +48,34 @@ find.bad.models.f <- function(dir) {
     return(dt.result[dt.result$test==FALSE,])
 }
 
-fix.bad.models.f <- function(dir) {
-    dt.fix <- find.bad.models.f(dir)
-    n <- nchar(dir) + nchar("/nn.bat.") + 1
-    k <- n + 5 # n to n+5 for batter id
-    l <- k + 2 # move over 2 for year
-    m <- l + 3 # l to l+3 for year
-    dt.fix$id <- substr(dt.fix$file,n,k)
-    dt.fix$year <- substr(dt.fix$file,l,m)
+fix.bad.batters.f <- function(dir) {
+  dt <- fix.bad.batters.helper.f(dir, FALSE)
+  return(dt)
+}
 
-    # remove bad models
-    mapply(file.remove, dt.fix$file)
+fix.bad.batters.parallel.f <- function(dir) {
+  dt <- fix.bad.batters.helper.f(dir, TRUE)
+  return(dt)
+}
 
+fix.bad.batters.helper.f <- function(dir, parallel) {
+  dt.fix <- find.bad.models.f(dir)
+  n <- nchar(dir) + nchar("/nn.bat.") + 1
+  k <- n + 5 # n to n+5 for batter id
+  l <- k + 2 # move over 2 for year
+  m <- l + 3 # l to l+3 for year
+  dt.fix$id <- substr(dt.fix$file,n,k)
+  dt.fix$year <- substr(dt.fix$file,l,m)
+
+  # remove bad models
+  mapply(file.remove, dt.fix$file)
+
+  if(parallel) {
     dt.fix$fixed <- mcmapply(bat.model.f,dt.fix$id,dt.fix$year,
-        mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",4L),mc.cleanup=TRUE)
+      mc.preschedule=TRUE,mc.set.seed=TRUE,mc.silent=FALSE,mc.cores=getOption("mc.cores",20L),mc.cleanup=TRUE)
+  } else {
+    dt.fix$fixed <- mapply(bat.model.f,dt.fix$id,dt.fix$year)
+  }
 
-    return(dt.fix)
+  return(dt.fix)
 }
