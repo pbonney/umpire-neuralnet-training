@@ -20,6 +20,7 @@ wrapper.generic.monthly.f <- function(year,min.date,max.date,has.mar.games,has.o
 
     dt.t$path <- mcmapply(ump.train.and.save.f,d.s=as.Date(dt.t$d.s),d.e=as.Date(dt.t$d.e),
         stand=dt.t$stand,pitch.limit=99999,dir=paste(getwd(),"models.umpire/monthly",sep="/"),
+        overwrite=FALSE,
         mc.cores=getOption("mc.cores",10L))
 
     return(dt.t$path)

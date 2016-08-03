@@ -20,7 +20,7 @@ rm(df.umplist)
 wrapper.individual.monthly.f <- function(myid,year,month,mystand) {
   path <- ump.train.and.save.f(id=myid,d.s=as.Date(paste(year,1,1,sep="-")),
     d.e=as.Date(paste(year,month,month.last.day.f(year),sep="-")),stand=mystand,
-    dir=paste(getwd(),"models.umpire/monthly",sep="/"))
+    dir=paste(getwd(),"models.umpire/monthly",sep="/"),overwrite=FALSE)
 
   return(path)
 }

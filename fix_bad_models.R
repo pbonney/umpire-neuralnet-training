@@ -33,14 +33,13 @@ try.model.wrapper.f <- function(filepath) {
 find.bad.models.f <- function(dir) {
   models.l <- dir(path=dir, pattern="*rda")
   dt.result <- data.table(file=paste(dir,models.l,sep="/"))
-  dt.result$test <- mapply(dt.result$file, try.model.wrapper.f)
+  dt.result$test <- mapply(try.model.wrapper.f, dt.result$file)
   return(dt.result[dt.result$test==FALSE,])
 }
 
-find.bad.ump.models.parallel.f <- function(dir) {
+find.bad.models.parallel.f <- function(dir) {
   models.l <- dir(path=dir, pattern="*rda")
   dt.result <- data.table(file=paste(dir,models.l,sep="/"))
-  dt.result$test <- lapply(dt.result$file, try.model.wrapper.f)
   dt.result$test <- mcmapply(try.model.wrapper.f, dt.result$file,
     mc.cores=getOption("mc.cores",20L))
   return(dt.result[dt.result$test==FALSE,])
@@ -57,15 +56,21 @@ fix.bad.models.parallel.f <- function(dir) {
 }
 
 fix.bad.models.helper.f <- function(dir, parallel) {
-  dt.fix <- find.bad.models.f(dir)
-  n <- nchar(dir) + nchar("/generic.") + 1
-  k <- n + 9 # n to n+9 for start date
-  l <- k + 2 # move over 2 for next date
-  m <- l + 9 # l to l+3 for end date
-  c <- m + 2 # move over 2 for batter hand
-  dt.fix$d.s <- as.Date(substr(dt.fix$file,n,k))
-  dt.fix$d.e <- as.Date(substr(dt.fix$file,l,m))
-  dt.fix$stand <- substr(dt.fix$file,c,c)
+  if(parallel) {
+    dt.fix <- find.bad.models.parallel.f(dir)
+  } else {
+    dt.fix <- find.bad.models.f(dir)
+  }
+  d <- nchar(dir)
+  dt.fix$n <- d + ifelse(substr(dt.fix$file,d+2,d+8)=="generic", 10, 9)
+  # n <- nchar(dir) + nchar("/generic.") + 1
+  dt.fix$k <- dt.fix$n + 9 # n to n+9 for start date
+  dt.fix$l <- dt.fix$k + 2 # move over 2 for next date
+  dt.fix$m <- dt.fix$l + 9 # l to l+3 for end date
+  dt.fix$c <- dt.fix$m + 2 # move over 2 for batter hand
+  dt.fix$d.s <- as.Date(substr(dt.fix$file,dt.fix$n,dt.fix$k))
+  dt.fix$d.e <- as.Date(substr(dt.fix$file,dt.fix$l,dt.fix$m))
+  dt.fix$stand <- substr(dt.fix$file,dt.fix$c,dt.fix$c)
 
   # remove bad models
   mapply(file.remove, dt.fix$file)
