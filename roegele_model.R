@@ -69,13 +69,13 @@ sz.model.roegele.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Da
 
 # For a given strike zone model, find the probability that a pitch located at
 # [px, pz] would be called a strike.
-eval.roegele.f <- function(dt.mod, px, pz) {
+eval.roegele.f <- function(dt.m, px, pz) {
   # Convert px, pz to grid coordinates
   x = floor(px*12)
   z = floor(pz*12)
 
   # Find the matching row
-  r = dt.mod[dt.mod$grid.x == x && dt.mod$grid.z == z,]
+  r = dt.m[dt.m$grid.x == x & dt.m$grid.z == z,]
 
   # If there's a matching row, return that ratio
   if(nrow(r) == 1) {
@@ -89,6 +89,12 @@ eval.roegele.f <- function(dt.mod, px, pz) {
 
   # No matching rows, return 0
   return(0)
+}
+eval.roegele.from.file.f <- function(filepath, px, pz) {
+  load(file=filepath)
+  dt.t <- dt.mod
+  rm(dt.mod)
+  return(eval.roegele.f(dt.t, px, pz))
 }
 
 # Save a given Roegele-based strike zone model for later use
