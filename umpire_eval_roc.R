@@ -26,7 +26,10 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
                           (b.sz_top+b.sz_bot)/2 as sz_mid,
                           p.px,
                           p.pz,
-                          p.des
+                          p.des,
+                          p.start_speed,
+                          p.pfx_x,
+                          p.pfx_z
                   FROM    umpires u,
                           atbats a,
                           pitches p,
@@ -77,6 +80,8 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
   m.l.name  <- paste(paste("./models.umpire",ifelse(month==0,"","monthly"),id,sep="/"),start,end2,"L","rda",sep=".")
   m.r.roeg.name <- paste(paste("./models.umpire",ifelse(month==0,"","monthly.roegele"),"roeg.generic",sep="/"),r.start,end,"R","rda",sep=".")
   m.l.roeg.name <- paste(paste("./models.umpire",ifelse(month==0,"","monthly.roegele"),"roeg.generic",sep="/"),r.start,end,"L","rda",sep=".")
+  m.r.gen.pdata.name <- paste(paste("./models.umpire",ifelse(month==0,"","monthly.pdata"),"generic.pitchdata",sep="/"),r.start,end,"R","rda",sep=".")
+  m.l.gen.pdata.name <- paste(paste("./models.umpire",ifelse(month==0,"","monthly.pdata"),"generic.pitchdata",sep="/"),r.start,end,"L","rda",sep=".")
 
   # message(paste("m.r.name:",m.r.name))
   # message(paste("m.r.gen.name",m.r.gen.name))
@@ -88,6 +93,8 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
   mg.l.ok <- FALSE
   mr.r.ok <- FALSE
   mr.l.ok <- FALSE
+  mp.r.ok <- FALSE
+  mp.l.ok <- FALSE
 
   if(file.exists(m.r.name)) {
     load(file=m.r.name)
@@ -95,7 +102,7 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     rm(m.t)
     p.test <- try(compute(m1.r,data.frame(px=0,pz.ratio=0))$net.result)
     if (class(p.test) == "try-error") {
-        cat(paste(id,year,month,"R"),file=log,sep="\n",append=TRUE)
+      message(paste("Bad model",id,year,month,"R"))
     } else {
       m1.r.ok <- TRUE
     }
@@ -107,7 +114,7 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     rm(m.t)
     p.test <- try(compute(m1.l,data.frame(px=0,pz.ratio=0))$net.result)
     if (class(p.test) == "try-error") {
-        cat(paste(id,year,month,"L"),file=log,sep="\n",append=TRUE)
+      message(paste("Bad model",id,year,month,"L"))
     } else {
       m1.l.ok <- TRUE
     }
@@ -118,7 +125,7 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     rm(m.t)
     p.test <- try(compute(mg.r,data.frame(px=0,pz.ratio=0))$net.result)
     if (class(p.test) == "try-error") {
-        cat(paste("generic",year,month,"R"),file=log,sep="\n",append=TRUE)
+      message(paste("Bad model","generic",year,month,"R"))
     } else {
       mg.r.ok <- TRUE
     }
@@ -129,9 +136,31 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     rm(m.t)
     p.test <- try(compute(mg.l,data.frame(px=0,pz.ratio=0))$net.result)
     if (class(p.test) == "try-error") {
-        cat(paste("generic",year,month,"L"),file=log,sep="\n",append=TRUE)
+      message(paste("Bad model","generic",year,month,"L"))
     } else {
       mg.l.ok <- TRUE
+    }
+  }
+  if(file.exists(m.r.gen.pdata.name)) {
+    load(file=m.r.gen.pdata.name)
+    mp.r <- m.t
+    rm(m.t)
+    p.test <- try(compute(mp.r,data.frame(px=0,pz.ratio=0,pfx_x=0,pfx_z=0))$net.result)
+    if (class(p.test) == "try-error") {
+      message(paste("Bad model","generic.pitchdata",year,month,"R"))
+    } else {
+      mp.r.ok <- TRUE
+    }
+  }
+  if(file.exists(m.l.gen.pdata.name)) {
+    load(file=m.l.gen.pdata.name)
+    mp.l <- m.t
+    rm(m.t)
+    p.test <- try(compute(mp.l,data.frame(px=0,pz.ratio=0,pfx_x=0,pfx_z=0))$net.result)
+    if (class(p.test) == "try-error") {
+        message(paste("Bad model","generic.pitchdata",year,month,"L"))
+    } else {
+      mp.l.ok <- TRUE
     }
   }
   if(file.exists(m.r.roeg.name)) {
@@ -142,10 +171,10 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
   }
 
   # Apply each model to data
-
   # Apply individual, non-regressed model (use generic model if model doesn't exist)
   if(m1.r.ok & !generic) {
     n.r <- nrow(m1.r$data)
+    dt.r$n <- n.r
     dt.r$nn_ind <- with(dt.r, compute(m1.r,data.frame(px=px,pz.ratio=pz.ratio)))$net.result
   } else if(mg.r.ok) {
     n.r <- 0
@@ -155,6 +184,7 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     dt.r$nn_ind <- -999
     message(paste("Bad model:",m.r.name))
   }
+  dt.r$n <- n.r
   if(m1.l.ok & !generic) {
     n.l <- nrow(m1.l$data)
     dt.l$nn_ind <- with(dt.l, compute(m1.l,data.frame(px=px,pz.ratio=pz.ratio)))$net.result
@@ -166,6 +196,7 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
     dt.l$nn_ind <- -999
     message(paste("Bad model:",m.l.name))
   }
+  dt.l$n <- n.l
 
   # Apply generic nn model
   if(mg.r.ok) {
@@ -179,6 +210,20 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
   } else {
     dt.l$nn_gen <- -999
     message(paste("Bad model:",m.l.gen.name))
+  }
+
+  # Apply generic pitchdata nn model
+  if(mp.r.ok) {
+    dt.r$nn_pdata <- with(dt.r, compute(mp.r,data.frame(px=px,pz.ratio=pz.ratio,pfx_x=pfx_x,pfx_z=pfx_z)))$net.result
+  } else {
+    dt.r$nn_pdata <- -999
+    message(paste("Bad model:",m.r.gen.pdata.name))
+  }
+  if(mp.l.ok) {
+    dt.l$nn_pdata <- with(dt.l, compute(mp.l,data.frame(px=px,pz.ratio=pz.ratio,pfx_x=pfx_x,pfx_z=pfx_z)))$net.result
+  } else {
+    dt.l$nn_pdata <- -999
+    message(paste("Bad model:",m.l.gen.pdata.name))
   }
 
   # Apply regressed individual model
@@ -210,8 +255,10 @@ score.pitch.nn.f <- function(id, year, month=0, generic=FALSE, predict=TRUE, reg
       dt.out <- data.table(gamedayPitchID=dt.o$gamedayPitchID,
                            umpire=dt.o$id,
                            date=dt.o$date,
+                           n=dt.o$n,
                            nn_ind=dt.o$nn_ind,
                            nn_gen=dt.o$nn_gen,
+                           nn_pdata=dt.o$nn_pdata,
                            nn_regress=dt.o$nn_regress,
                            roeg=dt.o$roeg,
                            c=dt.o$s.f,
@@ -228,8 +275,10 @@ roc.db.write.f <- function(dt.out.t) {
     fields.l <- list(gamedayPitchID="int",
                      umpire="int",
                      date="date",
+                     n="int",
                      nn_ind="double",
                      nn_gen="double",
+                     nn_pdata="double",
                      nn_regress="double",
                      roeg="double",
                      c="smallint",
@@ -250,7 +299,7 @@ dbSendQuery(mydb,sqlString)
 dbDisconnect(mydb)
 
 # Test that it works
-# score.pitch.nn.f(503077,2016,month=6,generic=FALSE,regress=900)
+# score.pitch.nn.f(503077,2015,month=6,generic=FALSE,regress=900)
 
 dt.roc$roc  <- mcmapply(score.pitch.nn.f,
                         dt.roc$id,

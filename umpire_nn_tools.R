@@ -8,7 +8,9 @@ h.ind.max <- 5
 pcount.cut <- 1500
 plimit.c <- 99999
 plimit.g <- 99999
+stepmax.c <- 200000
 h.gen <- 5
+h.pgen <- 5
 ump.mod.dir <- "models.umpire"
 
 # Return a string with the SQL query for retrieving umpire training data.
@@ -25,7 +27,10 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
                                 (b.sz_top+b.sz_bot)/2 as sz_mid,
                                 p.px,
                                 p.pz,
-                                p.des
+                                p.des,
+																p.start_speed,
+																p.pfx_x,
+																p.pfx_z
                         FROM    umpires u,
                                 atbats a,
                                 pitches p,
@@ -61,9 +66,19 @@ ump.training.data.query <- function(id = -1,d.s = as.Date("2006-01-01"),d.e = as
 #	pitch.limit: max number of pitches to use for training; will use most recent pitches regardless. default is plimit.c
 #	incl.spring: include spring training results in training data? default is "FALSE"
 # Function returns "FALSE" if model fails to converge, returns nn model otherwise.
-ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Date("2006-01-02"),
-			    stand = "B", pitch.limit = plimit.c, incl.spring = FALSE) {
-	sqlString <- ump.training.data.query(id=id,d.s=d.s,d.e=d.e,stand=stand,pitch.limit=pitch.limit,incl.spring=incl.spring)
+ump.train.model.f <- function(id = -1,
+															d.s = as.Date("2006-01-01"),
+															d.e = as.Date("2006-01-02"),
+			    										stand = "B",
+															pitch.limit = plimit.c,
+															incl.spring = FALSE,
+															incl.pitchdata = FALSE) {
+	sqlString <- ump.training.data.query(id=id,
+																			 d.s=d.s,
+																			 d.e=d.e,
+																			 stand=stand,
+																			 pitch.limit=pitch.limit,
+																			 incl.spring=incl.spring)
 
 	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
 	rs <- dbSendQuery(mydb,sqlString)
@@ -75,9 +90,18 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 	pcount <- nrow(dt)
 
 	h <- ifelse(pcount > pcount.cut, h.ind.max, h.ind.min)
+	h <- ifelse(id==-1, h.gen, h)
+	h <- ifelse(incl.pitchdata, h.pgen, h)
 
-	m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE,lifesign='full',threshold=max(0.02,pcount/100000)))
-	if (class(m) == "try-error") { return(FALSE) }
+	if(!incl.pitchdata) {
+		message("Trying regular NN")
+		m <- try(neuralnet(s.f~px+pz.ratio,data=dt,hidden=h,linear.output=FALSE,lifesign='full',threshold=max(0.02,pcount/100000),stepmax=stepmax.c))
+		if (class(m) == "try-error") { return(FALSE) }
+	} else {
+		message("Trying expanded NN")
+		m <- try(neuralnet(s.f~px+pz.ratio+pfx_x+pfx_z,data=dt,hidden=h,linear.output=FALSE,lifesign='full',threshold=max(0.02,pcount/50000),stepmax=stepmax.c))
+		if (class(m) == "try-error") { return(FALSE) }
+	}
 
 	return(m)
 }
@@ -91,9 +115,10 @@ ump.train.model.f <- function(id = -1, d.s = as.Date("2006-01-01"), d.e = as.Dat
 #	d.e: end of date range (exclusive)
 #	stand: batter hand
 #	dir (optional): path in which to save file; default is to save to [R working directory]/models.umpire/
-ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".") {
+ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".",incl.pitchdata=FALSE) {
 	if(dir==".") { dir <- paste(getwd(),ump.mod.dir,sep="/") }
 	prefix <- ifelse(id==-1,"generic",id)
+	prefix <- paste(prefix,ifelse(incl.pitchdata,".pitchdata",""),sep="")
 	file.name <- paste(prefix,d.s,d.e,stand,"rda",sep=".")
 	save.string <- paste(dir,file.name,sep="/")
 	save(m.t,file=save.string)
@@ -110,7 +135,15 @@ ump.save.model.f <- function(m.t,id=-1,d.s,d.e,stand="B",dir = ".") {
 #   pitch.limit (optional): maximum number of training pitches (default is plimit.c)
 #   incl.spring (optional): include spring training in training data? (default is FALSE)
 #   dir (optional): path in which to save file; default is to save to [R working directory]/models.umpire/
-ump.train.and.save.f <- function(id=-1,d.s,d.e,stand="B",pitch.limit=plimit.c,incl.spring=FALSE,dir=".",overwrite=TRUE) {
+ump.train.and.save.f <- function(id=-1,
+																 d.s,
+																 d.e,
+																 stand="B",
+																 pitch.limit=plimit.c,
+																 incl.spring=FALSE,
+																 dir=".",
+																 overwrite=TRUE,
+																 incl.pitchdata=FALSE) {
 	if(!overwrite) {
 		if(dir==".") { dir <- paste(getwd(),ump.mod.dir,sep="/") }
 		prefix <- ifelse(id==-1,"generic",id)
@@ -118,7 +151,7 @@ ump.train.and.save.f <- function(id=-1,d.s,d.e,stand="B",pitch.limit=plimit.c,in
 		save.string <- paste(dir,file.name,sep="/")
 		if(file.exists(save.string)) { return(save.string) }
 	}
-  model <- ump.train.model.f(id,d.s,d.e,stand,pitch.limit,incl.spring)
-  save <- ump.save.model.f(model,id,d.s,d.e,stand,dir)
+  model <- ump.train.model.f(id,d.s,d.e,stand,pitch.limit,incl.spring,incl.pitchdata)
+  save <- ump.save.model.f(model,id,d.s,d.e,stand,dir,incl.pitchdata)
   return(save)
 }
