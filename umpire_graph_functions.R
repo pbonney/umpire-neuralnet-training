@@ -15,7 +15,7 @@ rm(grid.bat)
 g.height <- 4
 g.width <- 5
 
-ump.in <- "./models.umpire/"
+ump.in <- "./models.umpire/monthly"
 bat.in <- "./models.batter/"
 ump.out <- "./umpire_graphs/"
 bat.out <- "./batter_graphs/"
@@ -24,9 +24,13 @@ bat.out <- "./batter_graphs/"
 fontsize.title = 12
 fontsize = 10
 THT_Theme = theme(text = element_text(family='Lato'),
-#                 panel.background = element_rect(fill = "white", color='#BFBFBF'),
-                 plot.margin = unit(c(50,50,50,50),"points"),
-#                 axis.line = element_line(color='#BFBFBF', size=.5),
+                 panel.background = element_rect(fill = "white", color='#BFBFBF'),
+                 plot.background = element_rect(fill = "transparent",colour = NA),
+                #  plot.margin = unit(c(50,50,50,50),"points"),
+                 panel.grid.minor = element_blank(),
+                 panel.grid.major = element_blank(),
+                 panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+                 axis.line = element_line(color='#BFBFBF', size=.5),
 #                 panel.grid.major = element_line(color='#BFBFBF', size=.25),
                  axis.title.x = element_text(family='Lato', face='bold', hjust=.5, vjust=-2, size=fontsize),
                  axis.title.y = element_text(family='Lato', face='bold', hjust=.5, vjust=3, size=fontsize),
@@ -36,7 +40,7 @@ THT_Theme = theme(text = element_text(family='Lato'),
 
 load.zone <- function(id.t,start.t,end.t,stand.t) {
 	filename <- paste(id.t,start.t,end.t,stand.t,"rda",sep=".")
-	load(paste(ump.in,filename,sep=""))
+	load(paste(ump.in,filename,sep="/"))
     nn.x <- m.t
 	return(nn.x)
 }
@@ -54,7 +58,7 @@ plot.zone.helper <- function(nn.t, filename.t, title.t="") {
         g <- ggplot(coords,aes(x,y))
         g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio")
         g <- g + scale_fill_gradient(low="white",high="black")
-        g <- g + ggtitle(title.t)
+        # g <- g + ggtitle(title.t)
         g <- g + THT_Theme
         ggsave(g,file=paste(ump.out,filename.t,sep=""),height=g.height,width=g.width)
 	return(TRUE)
@@ -66,6 +70,26 @@ plot.zone <- function(id.t,start.t,end.t,stand.t) {
     title <- paste(id.t,paste(stand.t,"HB",sep=""),paste(start.t,"to",end.t),sep=", ")
 	result <- plot.zone.helper(m,filename.z,title.t=title)
 	return(result)
+}
+
+plot.roeg <- function(id.t, start.t, end.t, stand.t) {
+  fileroot <- paste("roeg",id.t,start.t,end.t,stand.t,sep=".")
+  loadfile <- paste(fileroot,"rda",sep=".")
+  filepath <- paste(paste(ump.in,"roegele",sep="."),loadfile,sep="/")
+  load(file=filepath)
+  dt.t <- dt.mod
+  rm(dt.mod)
+
+  dt.t$x <- dt.t$grid.x/12
+  dt.t$y <- dt.t$grid.z/12
+
+  g <- ggplot(dt.t,aes(x,y))
+  g <- g + coord_cartesian(xlim = c(-2,2), ylim=c(0.5,4.5))
+  g <- g + geom_tile(aes(fill=ratio)) + xlab("X") + ylab("Z")
+  g <- g + scale_fill_gradient(low=("white"), high="black")
+  # g <- g + ggtitle(paste(id.t,paste(stand.t,"HB",sep=""),paste(start.t,"to",end.t),sep=", "))
+  g <- g + THT_Theme
+  ggsave(g,file=paste(ump.out,paste(fileroot,"png",sep="."),sep=""),height=g.height,width=g.width)
 }
 
 plot.nn.helper <- function(nn.t, filename.t) {
@@ -132,7 +156,7 @@ function (x, rep = NULL, x.entry = NULL, x.out = NULL, radius = 0.15,
     net <- x
     if (is.null(net$weights))
         stop("weights were not calculated")
-    if (!is.null(file) & !is.character(file)) 
+    if (!is.null(file) & !is.character(file))
         stop("'file' must be a string")
     if (is.null(rep)) {
         for (i in 1:length(net$weights)) {
