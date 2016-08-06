@@ -37,6 +37,20 @@ THT_Theme = theme(text = element_text(family='Lato'),
                  axis.text = element_text(family='Lato', color='black', size=fontsize),
                  title = element_text(family='Lato', face='bold', hjust=.5, vjust=3, lineheight=100,size=fontsize.title))
 
+draw.a.box <- function(x.min, x.max, y.min, y.max) {
+  x=c(0,0.70833)
+  y=c(2.5,2.5)
+  p=c(1,0)
+  dt=data.table(p=p,x=x,y=y)
+
+  g <- ggplot(dt,aes(x,y))
+  g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z")
+  g <- g + geom_rect(xmin=x.min, xmax=x.max, ymin=y.min, ymax=y.max, fill = "black")
+  g <- g + coord_cartesian(xlim = c(-2,2), ylim=c(0.5,4.5))
+  g <- g + scale_fill_gradient(low=("white"), high="black")
+  g <- g + THT_Theme
+  ggsave(g,file=paste(ump.out,"box.png",sep=""),height=g.height,width=g.width)
+}
 
 load.zone <- function(id.t,start.t,end.t,stand.t) {
 	filename <- paste(id.t,start.t,end.t,stand.t,"rda",sep=".")
