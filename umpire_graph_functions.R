@@ -70,7 +70,7 @@ plot.zone.helper <- function(nn.t, filename.t, title.t="") {
         coords <- data.frame(x=grid$x,y=grid$y)
         coords$p <- compute(nn.t,data.frame(px=coords$x,pz.ratio=coords$y))$net.result
         g <- ggplot(coords,aes(x,y))
-        g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z ratio")
+        g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z")
         g <- g + scale_fill_gradient(low="white",high="black")
         # g <- g + ggtitle(title.t)
         g <- g + THT_Theme
