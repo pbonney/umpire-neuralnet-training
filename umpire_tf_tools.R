@@ -52,7 +52,7 @@ ump.training.data.query.tf <- function(id = -1,d.s = as.Date("2006-01-01"),d.e =
 	else 		{ sqlString <- paste(sqlString,"AND g.type='R'") }
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') < '",d.e,"'",sep="")
         sqlString <- paste(sqlString," AND STR_TO_DATE(concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)), '%Y-%m-%d') >= '",d.s,"'",sep="")
-        sqlString <- paste(sqlString,"ORDER BY concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) DESC, p.gamedayPitchID DESC LIMIT",pitch.limit)
+        sqlString <- paste(sqlString,"ORDER BY concat(substr(a.gameName,5,4),'-',substr(a.gameName,10,2),'-',substr(a.gameName,13,2)) DESC, p.gamedayPitchID DESC LIMIT",as.integer(pitch.limit))
 }
 
 # Function to load data and train model for specified date range and umpire.
@@ -102,12 +102,10 @@ test_split <- function(df, cuts, prob, ...) {
   z
 }
 
-sqlString <- ump.training.data.query.tf(id=id,
-																		 d.s=d.s,
-																		 d.e=d.e,
-																		 stand=stand,
-																		 pitch.limit=pitch.limit,
-																		 incl.spring=incl.spring)
+sqlString <- ump.training.data.query.tf(id=483919,
+																		 d.s=as.Date("2012-03-01"),
+																		 d.e=as.Date("2012-12-01"),
+																		 stand="L")
 
 mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
 rs <- dbSendQuery(mydb,sqlString)
@@ -119,6 +117,15 @@ dt$s.f <- as.numeric(dt$des == "Called Strike")
 
 z <- test_split(dt, 3, c(0.6,0.2,0.2))
 
-train <- z[1]
-test <- z[2]
-validate <- z[3]
+dt.train <- data.frame(z[1])
+dt.test <- data.frame(z[2])
+dt.validate <- data.frame(z[3])
+
+m.data.train <- data.matrix(data.frame(dt.train$px, dt.train$pz.ratio))
+m.label.train <- data.matrix(data.frame(dt.train$s.f))
+
+m.data.test <- data.matrix(data.frame(dt.test$px, dt.test$pz.ratio))
+m.label.test <- data.matrix(data.frame(dt.test$s.f))
+
+m.data.validate <- data.matrix(data.frame(dt.validate$px, dt.validate$pz.ratio))
+m.label.validate <- data.matrix(data.frame(dt.validate$s.f))
