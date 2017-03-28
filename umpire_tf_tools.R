@@ -78,7 +78,7 @@ ump.train.model.tf <- function(id = -1,
 																			 pitch.limit=pitch.limit,
 																			 incl.spring=incl.spring)
 
-	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="192.168.235.38",dbname="gameday")
+	mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
 	rs <- dbSendQuery(mydb,sqlString)
 	dt <- fetch(rs,-1)
 	dbDisconnect(mydb)
