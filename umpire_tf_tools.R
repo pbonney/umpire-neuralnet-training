@@ -102,10 +102,10 @@ test_split <- function(df, cuts, prob, ...) {
   z
 }
 
-sqlString <- ump.training.data.query.tf(id=483919,
-																		 d.s=as.Date("2012-03-01"),
-																		 d.e=as.Date("2012-12-01"),
-																		 stand="L")
+sqlString <- ump.training.data.query.tf(id=427058,
+																		 d.s=as.Date("2016-03-01"),
+																		 d.e=as.Date("2016-12-01"),
+																		 stand="R")
 
 mydb <- dbConnect(dbDriver("MySQL"),user="bbos",password="bbos",host="localhost",dbname="gameday")
 rs <- dbSendQuery(mydb,sqlString)
@@ -122,13 +122,16 @@ dt.test <- data.frame(z[2])
 dt.validate <- data.frame(z[3])
 
 m.data.train <- data.matrix(data.frame(dt.train$px, dt.train$pz.ratio))
-m.label.train <- data.matrix(data.frame(dt.train$s.f))
+colnames(m.data.train) <- NULL
+m.label.train <- as.integer(data.frame(dt.train$s.f)[,1])
 
 m.data.test <- data.matrix(data.frame(dt.test$px, dt.test$pz.ratio))
-m.label.test <- data.matrix(data.frame(dt.test$s.f))
+colnames(m.data.test) <- NULL
+m.label.test <- as.integer(data.frame(dt.test$s.f)[,1])
 
 m.data.validate <- data.matrix(data.frame(dt.validate$px, dt.validate$pz.ratio))
-m.label.validate <- data.matrix(data.frame(dt.validate$s.f))
+colnames(m.data.test) <- NULL
+m.label.validate <- as.integer(data.frame(dt.validate$s.f)[,1])
 
 sess <- tf$InteractiveSession()
 
@@ -151,16 +154,20 @@ sess$run(tf$global_variables_initializer())
 x_in <- m.data.train
 y_in <- tf$one_hot(m.label.train, 2L)$eval()
 
+correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
+accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
+
 print("Train!!!")
 for (i in 1:1000) {
   sess$run(train_step,
            feed_dict = dict(x = x_in, y_ = y_in))
+  if (i %% 20 == 0) {
+		train_accuracy <- accuracy$eval(feed_dict = dict(x = x_in, y_ = y_in))
+    cat(sprintf("step %d, training accuracy %g\n", i, train_accuracy))
+	}
 }
 
 print("Evaluate!")
-correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
-accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
-
 x_test <- m.data.test
 y_test <- tf$one_hot(m.label.test, 2L)$eval()
 
