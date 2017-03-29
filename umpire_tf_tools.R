@@ -129,3 +129,40 @@ m.label.test <- data.matrix(data.frame(dt.test$s.f))
 
 m.data.validate <- data.matrix(data.frame(dt.validate$px, dt.validate$pz.ratio))
 m.label.validate <- data.matrix(data.frame(dt.validate$s.f))
+
+sess <- tf$InteractiveSession()
+
+x <- tf$placeholder(tf$float32, shape(NULL, 2L))
+W <- tf$Variable(tf$zeros(shape(2L, 2L)))
+b <- tf$Variable(tf$zeros(shape(2L)))
+
+y <- tf$nn$softmax(tf$matmul(x, W) + b)
+
+y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
+
+print("Define optimizer")
+cross_entropy <- tf$reduce_mean(-tf$reduce_sum(y_ * tf$log(y), reduction_indices=1L))
+
+optimizer <- tf$train$GradientDescentOptimizer(0.5)
+train_step <- optimizer$minimize(cross_entropy)
+
+sess$run(tf$global_variables_initializer())
+
+x_in <- m.data.train
+y_in <- tf$one_hot(m.label.train, 2L)$eval()
+
+print("Train!!!")
+for (i in 1:1000) {
+  sess$run(train_step,
+           feed_dict = dict(x = x_in, y_ = y_in))
+}
+
+print("Evaluate!")
+correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
+accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
+
+x_test <- m.data.test
+y_test <- tf$one_hot(m.label.test, 2L)$eval()
+
+result <- sess$run(accuracy, feed_dict = dict(x = x_test, y_ = y_test))
+print(result)
