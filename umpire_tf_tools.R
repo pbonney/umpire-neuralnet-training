@@ -155,22 +155,29 @@ sess <- tf$InteractiveSession()
 
 x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x_0')
 
-W_0 <- weight_variable(shape(2L, 4L), name='W_0')
-b_0 <- bias_variable(shape(1L, 4L), name='b_0')
+W_0 <- weight_variable(shape(2L, 2L), name='W_0')
+b_0 <- bias_variable(shape(1L, 2L), name='b_0')
 y_0 <- tf$matmul(x, W_0) + b_0
 a_0 <- tf$nn$relu(y_0)
 
-W_fc1 <- weight_variable(shape(4L, 64L), name='W_fc1')
-b_fc1 <- bias_variable(shape(1L, 64L), name='b_fc1')
-y_fc1 <- tf$matmul(a_0, W_fc1) + b_fc1
-a_fc1 <- tf$nn$relu(y_fc1)
+W_h1 <- weight_variable(shape(2L, 32L), name='W_h1')
+b_h1 <- bias_variable(shape(1L, 32L), name='b_h1')
+y_h1 <- tf$matmul(a_0, W_h1) + b_h1
+a_h1 <- tf$nn$relu(y_h1)
 
-W_fc2 <- weight_variable(shape(64L, 2L), name='W_fc2')
-b_fc2 <- bias_variable(shape(1L, 2L), name='b_fc2')
-y_fc2 <- tf$matmul(a_fc1, W_fc2) + b_fc2
-a_fc2 <- tf$nn$relu(y_fc2)
+W_h2 <- weight_variable(shape(2L, 32L), name='W_h2')
+b_h2 <- bias_variable(shape(1L, 32L), name='b_h2')
+y_h2 <- tf$matmul(a_0, W_h2) + b_h2
+a_h2 <- tf$nn$relu(y_h2)
 
-y <- tf$nn$softmax(a_fc2)
+a_h_comb <- tf$concat(c(a_h1, a_h2), 1L)
+
+W_out <- weight_variable(shape(64L, 2L), name='W_out')
+b_out <- bias_variable(shape(1L, 2L), name='b_out')
+y_out <- tf$matmul(a_h_comb, W_out) + b_out
+a_out <- tf$nn$relu(y_out)
+
+y <- tf$nn$softmax(a_out)
 
 y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
 
