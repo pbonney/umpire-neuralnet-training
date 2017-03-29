@@ -104,7 +104,7 @@ test_split <- function(df, cuts, prob, ...) {
 
 weight_variable <- function(shape, name=NULL) {
   initial <- tf$truncated_normal(shape, stddev = 0.1)
-	if (name==NULL) {
+	if (is.null(name)) {
 		tf$Variable(initial)
 	} else {
 		tf$Variable(initial, name=name)
@@ -113,7 +113,7 @@ weight_variable <- function(shape, name=NULL) {
 
 bias_variable <- function(shape, name=NULL) {
   initial <- tf$constant(0.1, shape = shape)
-	if (name==NULL) {
+	if (is.null(name)) {
 		tf$Variable(initial)
 	} else {
 		tf$Variable(initial, name=name)
@@ -154,29 +154,31 @@ m.label.validate <- as.integer(data.frame(dt.validate$s.f)[,1])
 sess <- tf$InteractiveSession()
 
 x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x_0')
+
 W_0 <- weight_variable(shape(2L, 4L), name='W_0')
-b_0 <- bias_variable(shape(1L, 4L)), name='b_0')
+b_0 <- bias_variable(shape(1L, 4L), name='b_0')
+y_0 <- tf$matmul(x, W_0) + b_0
+a_0 <- tf$nn$relu(y_0)
 
-y_0 <- tf$matmul(x_0, W_0) + b_0
+W_fc1 <- weight_variable(shape(4L, 64L), name='W_fc1')
+b_fc1 <- bias_variable(shape(1L, 64L), name='b_fc1')
+y_fc1 <- tf$matmul(a_0, W_fc1) + b_fc1
+a_fc1 <- tf$nn$relu(y_fc1)
 
-a_0 <- tf$nn$sigmoid(y_0)
+W_fc2 <- weight_variable(shape(64L, 2L), name='W_fc2')
+b_fc2 <- bias_variable(shape(1L, 2L), name='b_fc2')
+y_fc2 <- tf$matmul(a_fc1, W_fc2) + b_fc2
+a_fc2 <- tf$nn$relu(y_fc2)
 
-W_1 <- weight_variable(shape(4L, 2L)), name='W_1')
-b_1 <- bias_variable(shape(1L, 2L)), name='b_1')
-
-y_1 <- tf$matmul(a_0, W_1) + b_1
-
-a_1 <- tf$nn$sigmoid(y_1)
-
-y <- tf$nn$softmax(a_1)
+y <- tf$nn$softmax(a_fc2)
 
 y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
 
 print("Define optimizer")
 cross_entropy <- tf$reduce_mean(-tf$reduce_sum(y_ * tf$log(y), reduction_indices=1L))
 
-# optimizer <- tf$train$AdamOptimizer(1e-4)
-optimizer <- tf$train$GradientDescentOptimizer(0.5)
+optimizer <- tf$train$AdamOptimizer(1e-4)
+# optimizer <- tf$train$GradientDescentOptimizer(0.5)
 train_step <- optimizer$minimize(cross_entropy)
 
 sess$run(tf$global_variables_initializer())
@@ -188,7 +190,7 @@ correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
 accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
 
 print("Train!!!")
-for (i in 1:1000) {
+for (i in 1:100) {
   sess$run(train_step,
            feed_dict = dict(x = x_in, y_ = y_in))
   if (i %% 20 == 0) {
