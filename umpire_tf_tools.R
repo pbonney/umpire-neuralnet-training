@@ -102,6 +102,24 @@ test_split <- function(df, cuts, prob, ...) {
   z
 }
 
+weight_variable <- function(shape, name=NULL) {
+  initial <- tf$truncated_normal(shape, stddev = 0.1)
+	if (name==NULL) {
+		tf$Variable(initial)
+	} else {
+		tf$Variable(initial, name=name)
+	}
+}
+
+bias_variable <- function(shape, name=NULL) {
+  initial <- tf$constant(0.1, shape = shape)
+	if (name==NULL) {
+		tf$Variable(initial)
+	} else {
+		tf$Variable(initial, name=name)
+	}
+}
+
 sqlString <- ump.training.data.query.tf(id=427058,
 																		 d.s=as.Date("2016-03-01"),
 																		 d.e=as.Date("2016-12-01"),
@@ -135,17 +153,29 @@ m.label.validate <- as.integer(data.frame(dt.validate$s.f)[,1])
 
 sess <- tf$InteractiveSession()
 
-x <- tf$placeholder(tf$float32, shape(NULL, 2L))
-W <- tf$Variable(tf$zeros(shape(2L, 2L)))
-b <- tf$Variable(tf$zeros(shape(2L)))
+x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x_0')
+W_0 <- weight_variable(shape(2L, 4L), name='W_0')
+b_0 <- bias_variable(shape(1L, 4L)), name='b_0')
 
-y <- tf$nn$softmax(tf$matmul(x, W) + b)
+y_0 <- tf$matmul(x_0, W_0) + b_0
+
+a_0 <- tf$nn$sigmoid(y_0)
+
+W_1 <- weight_variable(shape(4L, 2L)), name='W_1')
+b_1 <- bias_variable(shape(1L, 2L)), name='b_1')
+
+y_1 <- tf$matmul(a_0, W_1) + b_1
+
+a_1 <- tf$nn$sigmoid(y_1)
+
+y <- tf$nn$softmax(a_1)
 
 y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
 
 print("Define optimizer")
 cross_entropy <- tf$reduce_mean(-tf$reduce_sum(y_ * tf$log(y), reduction_indices=1L))
 
+# optimizer <- tf$train$AdamOptimizer(1e-4)
 optimizer <- tf$train$GradientDescentOptimizer(0.5)
 train_step <- optimizer$minimize(cross_entropy)
 
