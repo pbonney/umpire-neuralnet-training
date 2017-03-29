@@ -155,24 +155,37 @@ sess <- tf$InteractiveSession()
 
 x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x_0')
 
+D_h <- 2L
+
 W_0 <- weight_variable(shape(2L, 2L), name='W_0')
 b_0 <- bias_variable(shape(1L, 2L), name='b_0')
 y_0 <- tf$matmul(x, W_0) + b_0
-a_0 <- tf$nn$relu(y_0)
+# a_0 <- tf$nn$relu(y_0)
+a_0 <- y_0
 
-W_h1 <- weight_variable(shape(2L, 32L), name='W_h1')
-b_h1 <- bias_variable(shape(1L, 32L), name='b_h1')
+W_h1 <- weight_variable(shape(2L, D_h), name='W_h1')
+b_h1 <- bias_variable(shape(1L, D_h), name='b_h1')
 y_h1 <- tf$matmul(a_0, W_h1) + b_h1
 a_h1 <- tf$nn$relu(y_h1)
 
-W_h2 <- weight_variable(shape(2L, 32L), name='W_h2')
-b_h2 <- bias_variable(shape(1L, 32L), name='b_h2')
+W_h2 <- weight_variable(shape(2L, D_h), name='W_h2')
+b_h2 <- bias_variable(shape(1L, D_h), name='b_h2')
 y_h2 <- tf$matmul(a_0, W_h2) + b_h2
 a_h2 <- tf$nn$relu(y_h2)
 
-a_h_comb <- tf$concat(c(a_h1, a_h2), 1L)
+W_h3 <- weight_variable(shape(2L, D_h), name='W_h3')
+b_h3 <- bias_variable(shape(1L, D_h), name='b_h3')
+y_h3 <- tf$matmul(a_0, W_h3) + b_h3
+a_h3 <- tf$nn$relu(y_h3)
 
-W_out <- weight_variable(shape(64L, 2L), name='W_out')
+W_h4 <- weight_variable(shape(2L, D_h), name='W_h4')
+b_h4 <- bias_variable(shape(1L, D_h), name='b_h4')
+y_h4 <- tf$matmul(a_0, W_h4) + b_h4
+a_h4 <- tf$nn$relu(y_h4)
+
+a_h_comb <- tf$concat(c(a_h1, a_h2, a_h3, a_h4), 1L)
+
+W_out <- weight_variable(shape(4L * D_h, 2L), name='W_out')
 b_out <- bias_variable(shape(1L, 2L), name='b_out')
 y_out <- tf$matmul(a_h_comb, W_out) + b_out
 a_out <- tf$nn$relu(y_out)
@@ -183,12 +196,12 @@ y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
 
 print("Define optimizer")
 cross_entropy <- tf$reduce_mean(-tf$reduce_sum(y_ * tf$log(y), reduction_indices=1L))
+# loss <- tf$reduce_mean((y - y_) ^ 2, reduction_indices=1L)
 
 optimizer <- tf$train$AdamOptimizer(1e-4)
 # optimizer <- tf$train$GradientDescentOptimizer(0.5)
 train_step <- optimizer$minimize(cross_entropy)
-
-sess$run(tf$global_variables_initializer())
+# train_step <- optimizer$minimize(loss)
 
 x_in <- m.data.train
 y_in <- tf$one_hot(m.label.train, 2L)$eval()
@@ -196,8 +209,14 @@ y_in <- tf$one_hot(m.label.train, 2L)$eval()
 correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
 accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
 
+a = tf$argmax(y, 1L)
+b = tf$argmax(y_, 1L)
+auc = tf$contrib$metrics$streaming_auc(a, b)
+
+sess$run(tf$global_variables_initializer())
+
 print("Train!!!")
-for (i in 1:100) {
+for (i in 1:200) {
   sess$run(train_step,
            feed_dict = dict(x = x_in, y_ = y_in))
   if (i %% 20 == 0) {
@@ -212,3 +231,7 @@ y_test <- tf$one_hot(m.label.test, 2L)$eval()
 
 result <- sess$run(accuracy, feed_dict = dict(x = x_test, y_ = y_test))
 print(result)
+
+sess$run(tf$local_variables_initializer())
+result_auc <- sess$run(auc, feed_dict = dict(x = x_test, y_ = y_test))
+print(result_auc)
