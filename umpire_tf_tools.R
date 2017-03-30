@@ -1,6 +1,8 @@
 library(RMySQL)
 library(data.table)
 library(tensorflow)
+library(ggplot2)
+
 source("gameday_date_functions.R")
 
 plimit.c <- 10000000
@@ -295,3 +297,13 @@ print(result2)
 sess$run(tf$local_variables_initializer())
 result_auc2 <- sess$run(auc2, feed_dict = dict(x2 = x2_test, y2_ = y2_test))
 print(result_auc2)
+
+# Graph the models
+x.plot <- seq(-2,2,by=0.025)
+z.plot <- seq(-2,2,by=0.025)
+
+grid <- expand.grid(x=x.plot,y=z.plot)
+m.plot <- as.matrix(cbind(grid[,1], grid[,2]))
+
+plot1 <- y$eval(feed_dict = dict(x = m.plot))
+plot2 <- y2$eval(feed_dict = dict(x2 = m.plot))
