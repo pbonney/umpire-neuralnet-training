@@ -4,6 +4,7 @@ library(tensorflow)
 library(ggplot2)
 
 source("gameday_date_functions.R")
+source("umpire_graph_functions.R")
 
 plimit.c <- 10000000
 plimit.g <- 10000000
@@ -141,86 +142,52 @@ dt.train <- data.frame(z[1])
 dt.test <- data.frame(z[2])
 dt.validate <- data.frame(z[3])
 
-m.data.train <- data.matrix(data.frame(dt.train$px, dt.train$pz.ratio))
+m.data.train <- data.matrix(data.frame(dt.train$px, dt.train$pz))
 colnames(m.data.train) <- NULL
 m.label.train <- as.integer(data.frame(dt.train$s.f)[,1])
 
-m.data.test <- data.matrix(data.frame(dt.test$px, dt.test$pz.ratio))
+m.data.test <- data.matrix(data.frame(dt.test$px, dt.test$pz))
 colnames(m.data.test) <- NULL
 m.label.test <- as.integer(data.frame(dt.test$s.f)[,1])
 
-m.data.validate <- data.matrix(data.frame(dt.validate$px, dt.validate$pz.ratio))
+m.data.validate <- data.matrix(data.frame(dt.validate$px, dt.validate$pz))
 colnames(m.data.test) <- NULL
 m.label.validate <- as.integer(data.frame(dt.validate$s.f)[,1])
 
 sess <- tf$InteractiveSession()
 
-# Model 1
+D_h <- 128L
 
-x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x_0')
+x <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x')
 
-D_h <- 2L
+W_i <- weight_variable(shape(2L, D_h), name='W_i')
+b_i <- bias_variable(shape(1L, D_h), name='b_i')
+A <- tf$tanh(tf$matmul(x, W_i) + b_i)
 
-W_0 <- weight_variable(shape(2L, 2L), name='W_0')
-b_0 <- bias_variable(shape(1L, 2L), name='b_0')
-y_0 <- tf$matmul(x, W_0) + b_0
-a_0 <- tf$nn$sigmoid(y_0)
+W_o <- weight_variable(shape(D_h, 1L), name='W_o')
+b_o <- bias_variable(shape(1L, 1L), name='b_o')
+y <- tf$sigmoid(tf$matmul(A, W_o) + b_o)
 
-W_h1 <- weight_variable(shape(2L, D_h), name='W_h1')
-b_h1 <- bias_variable(shape(1L, D_h), name='b_h1')
-y_h1 <- tf$matmul(a_0, W_h1) + b_h1
-a_h1 <- tf$nn$sigmoid(y_h1)
+y_ <- tf$placeholder(tf$float32, shape(NULL, 1L))
 
-W_h2 <- weight_variable(shape(2L, D_h), name='W_h2')
-b_h2 <- bias_variable(shape(1L, D_h), name='b_h2')
-y_h2 <- tf$matmul(a_0, W_h2) + b_h2
-a_h2 <- tf$nn$sigmoid(y_h2)
-
-W_h3 <- weight_variable(shape(2L, D_h), name='W_h3')
-b_h3 <- bias_variable(shape(1L, D_h), name='b_h3')
-y_h3 <- tf$matmul(a_0, W_h3) + b_h3
-a_h3 <- tf$nn$sigmoid(y_h3)
-
-W_h4 <- weight_variable(shape(2L, D_h), name='W_h4')
-b_h4 <- bias_variable(shape(1L, D_h), name='b_h4')
-y_h4 <- tf$matmul(a_0, W_h4) + b_h4
-a_h4 <- tf$nn$sigmoid(y_h4)
-
-a_h_comb <- tf$concat(c(a_h1, a_h2, a_h3, a_h4), 1L)
-
-W_out <- weight_variable(shape(4L * D_h, 2L), name='W_out')
-b_out <- bias_variable(shape(1L, 2L), name='b_out')
-y_out <- tf$matmul(a_h_comb, W_out) + b_out
-a_out <- tf$nn$sigmoid(y_out)
-
-y <- a_out
-# y <- tf$nn$softmax(a_out)
-
-y_ <- tf$placeholder(tf$float32, shape(NULL, 2L))
-
-print("Define optimizer")
-# loss <- tf$reduce_mean(-tf$reduce_sum(y_ * tf$log(y), reduction_indices=1L)) # cross-entropy
-loss <- tf$reduce_mean(tf$losses$sigmoid_cross_entropy(logits=y, multi_class_labels=y_))
-# loss <- tf$reduce_mean((y - y_) ^ 2, reduction_indices=1L)
-
-optimizer <- tf$train$AdamOptimizer(1e-4)
-# optimizer <- tf$train$GradientDescentOptimizer(0.5)
+loss <- tf$nn$l2_loss(y - y_)
+optimizer <- tf$train$AdamOptimizer(1e-2)
 train_step <- optimizer$minimize(loss)
 
 x_in <- m.data.train
-y_in <- tf$one_hot(m.label.train, 2L)$eval()
+y_in <- as.matrix(m.label.train)
 
-correct_prediction <- tf$equal(tf$argmax(y, 1L), tf$argmax(y_, 1L))
+correct_prediction <- abs(y - y_) < 0.5
 accuracy <- tf$reduce_mean(tf$cast(correct_prediction, tf$float32))
 
-a = tf$argmax(y, 1L)
-b = tf$argmax(y_, 1L)
+a = y
+b = y_
 auc = tf$contrib$metrics$streaming_auc(a, b)
 
 sess$run(tf$global_variables_initializer())
 
 print("Train!!!")
-for (i in 1:200) {
+for (i in 1:1000) {
   sess$run(train_step,
            feed_dict = dict(x = x_in, y_ = y_in))
   if (i %% 20 == 0) {
@@ -231,7 +198,7 @@ for (i in 1:200) {
 
 print("Evaluate!")
 x_test <- m.data.test
-y_test <- tf$one_hot(m.label.test, 2L)$eval()
+y_test <- as.matrix(m.label.test)
 
 result <- sess$run(accuracy, feed_dict = dict(x = x_test, y_ = y_test))
 print(result)
@@ -240,70 +207,20 @@ sess$run(tf$local_variables_initializer())
 result_auc <- sess$run(auc, feed_dict = dict(x = x_test, y_ = y_test))
 print(result_auc)
 
-# model 2
-
-x2 <- tf$placeholder(tf$float32, shape(NULL, 2L), name='x2')
-
-D_h <- 2L
-
-W2 <- weight_variable(shape(2L, 10L), name='W2')
-b2 <- bias_variable(shape(1L, 10L), name='b2')
-y2_0 <- tf$matmul(x2, W2) + b2
-a2 <- tf$nn$sigmoid(y2_0)
-
-Wo <- weight_variable(shape(10L, 1L), name='Wo')
-bo <- bias_variable(shape(1L, 1L), name='bo')
-y2 <- tf$matmul(a2, Wo) + bo
-
-y2_ <- tf$placeholder(tf$float32, shape(NULL, 1L))
-
-loss2 <- tf$reduce_mean(tf$losses$sigmoid_cross_entropy(logits=y2, multi_class_labels=y2_))
-# loss2 <- tf$reduce_mean((y - y_) ^ 2, reduction_indices=1L)
-
-optimizer2 <- tf$train$AdamOptimizer(1e-4)
-# optimizer2 <- tf$train$GradientDescentOptimizer(0.5)
-train_step2 <- optimizer2$minimize(loss2)
-
-x2_in <- m.data.train
-y2_in <- as.matrix(m.label.train)
-
-# correct_prediction2 <- tf$equal(tf$round(tf$cast(y2, tf$float32)), tf$round(tf$cast(y2_, tf$float32)))
-correct_prediction2 <- abs(y2 - y2_) < 0.5
-accuracy2 <- tf$reduce_mean(tf$cast(correct_prediction2, tf$float32))
-
-a2 = y2
-b2 = y2_
-auc2 = tf$contrib$metrics$streaming_auc(a2, b2)
-
-sess$run(tf$global_variables_initializer())
-
-print("Train!!!")
-for (i in 1:200) {
-  sess$run(train_step2,
-           feed_dict = dict(x2 = x2_in, y2_ = y2_in))
-  if (i %% 20 == 0) {
-		train_accuracy2 <- accuracy2$eval(feed_dict = dict(x2 = x2_in, y2_ = y2_in))
-    cat(sprintf("step %d, training accuracy %g\n", i, train_accuracy2))
-	}
-}
-
-print("Evaluate!")
-x2_test <- m.data.test
-y2_test <- as.matrix(m.label.test)
-
-result2 <- sess$run(accuracy2, feed_dict = dict(x2 = x2_test, y2_ = y2_test))
-print(result2)
-
-sess$run(tf$local_variables_initializer())
-result_auc2 <- sess$run(auc2, feed_dict = dict(x2 = x2_test, y2_ = y2_test))
-print(result_auc2)
-
-# Graph the models
+# Graph the model
 x.plot <- seq(-2,2,by=0.025)
-z.plot <- seq(-2,2,by=0.025)
+z.plot <- seq(1,5,by=0.025)
 
 grid <- expand.grid(x=x.plot,y=z.plot)
 m.plot <- as.matrix(cbind(grid[,1], grid[,2]))
 
-plot1 <- y$eval(feed_dict = dict(x = m.plot))
-plot2 <- y2$eval(feed_dict = dict(x2 = m.plot))
+plot_vals <- y$eval(feed_dict = dict(x = m.plot))
+
+plot_tf <- function(x, y, p, filename="tf.png") {
+	coords <- data.frame(x=x, y=y, p=p)
+	g <- ggplot(coords,aes(x,y))
+	g <- g + geom_tile(aes(fill=p)) + xlab("X") + ylab("Z")
+	g <- g + scale_fill_gradient(low="white",high="black")
+	g <- g + THT_Theme
+	ggsave(g,file=paste("./umpire_graphs/",filename,sep=""),height=g.height,width=g.width)
+}
