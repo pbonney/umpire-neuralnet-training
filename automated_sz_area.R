@@ -6,14 +6,16 @@ save_dir <- "./umpire_uzr"
 area_prefix <- "sz_area_"
 file_type <- ".txt"
 
+year.c <- 2017
+
 message(paste(Sys.time(),"Loading sz_area.R"))
 source("sz_area.R")
 message(paste(Sys.time(),"Calculating NN-based area"))
-dt.me <- area.all.years.f(min.year=2016, max.year=2016)
+dt.me <- area.all.years.f(min.year=year.c, max.year=year.c)
 message(paste(Sys.time(),"Done with NN-based area"))
 
 message(paste(Sys.time(),"Calculating Roegele area"))
-dt.roeg <- roegele.all.years.f(min.year=2016, max.year=2016)
+dt.roeg <- roegele.all.years.f(min.year=year.c, max.year=year.c)
 message(paste(Sys.time(),"Done with Roegele area"))
 
 dt.area <- data.table(year=dt.me$year, stand=dt.me$stand, my_area=dt.me$area, roegele_area=dt.roeg$area, diff=dt.me$area-dt.roeg$area)

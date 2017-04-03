@@ -10,6 +10,7 @@ res_tot_prefix <- "results_tot_"
 res_prefix <- "results_"
 file_type <- ".txt"
 model_dir <- "./models.umpire"
+report_year <- 2017
 
 # Process:
 # 0. Backup old umpire model files to directory
@@ -18,8 +19,8 @@ model_dir <- "./models.umpire"
 # 3. Update database with batter strike zone data (load batter_sz.R)
 # 4. Update umpire NN models (load umpire_generic_yearly.R)
 # 5. Repair any bad models (load fix_bad_models, run fix.bad.models.f("./models.umpire"))
-# 6. Calculate NN zone area (load sz_area.R, run dt.me <- area.all.years.f(min.year=2016, max.year=2016))
-# 7. Calculate Roeg zone area (run dt.roeg <- roegele.all.years.f(min.year=2016, max.year=2016))
+# 6. Calculate NN zone area (load sz_area.R, run dt.me <- area.all.years.f(min.year=YYYY, max.year=YYYY))
+# 7. Calculate Roeg zone area (run dt.roeg <- roegele.all.years.f(min.year=YYYY, max.year=YYYY))
 # 8. Calculate diff (diff <- dt.me$area - dt.roeg$area)
 # 9. Save diff to file
 # 10. Update umpire evaluations (load umpire_eval.R)
@@ -33,7 +34,7 @@ cmd_mkdir <- paste("mkdir", backup_dir, sep=" ")
 message(paste(Sys.time(),cmd_mkdir))
 system(cmd_mkdir)
 
-cmd_cp <- paste("cp", paste(model_dir, "generic.2016*", sep="/"), paste(backup_dir, "/", sep=""), sep=" ")
+cmd_cp <- paste("cp", paste(model_dir, paste("generic.", report_year, "*", sep=""), sep="/"), paste(backup_dir, "/", sep=""), sep=" ")
 message(paste(Sys.time(),cmd_cp))
 system(cmd_cp)
 
@@ -72,12 +73,12 @@ message(paste(Sys.time(),"Done with fixing umpire models"))
 message(paste(Sys.time(),"Loading sz_area.R"))
 source("sz_area.R")
 message(paste(Sys.time(),"Calculating NN-based area"))
-dt.me <- area.all.years.f(min.year=2016, max.year=2016)
+dt.me <- area.all.years.f(min.year=report_year, max.year=report_year)
 message(paste(Sys.time(),"Done with NN-based area"))
 
 # 7
 message(paste(Sys.time(),"Calculating Roegele area"))
-dt.roeg <- roegele.all.years.f(min.year=2016, max.year=2016)
+dt.roeg <- roegele.all.years.f(min.year=report_year, max.year=report_year)
 message(paste(Sys.time(),"Done with Roegele area"))
 
 # 8

@@ -16,6 +16,6 @@ AND	a.b_height_in is not null
 AND	a.b_height_in != 0
 AND	p.px is not null
 AND	p.pz is not null
-AND	substr(u.gameName,5,4)=2016
+AND	substr(u.gameName,5,4)=2017
 GROUP BY 1,2,3
 ;

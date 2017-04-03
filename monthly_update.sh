@@ -27,8 +27,8 @@ echo "emailing to $EMAIL"
 # 3. Update database with batter strike zone data (load batter_sz.R)
 # 4. Update umpire NN models (load umpire_generic_yearly.R)
 # 5. Repair any bad models (load fix_bad_models, run fix.bad.models.f("./models.umpire"))
-# 6. Calculate NN zone area (load sz_area.R, run dt.me <- area.all.years.f(min.year=2016, max.year=2016))
-# 7. Calculate Roeg zone area (run dt.roeg <- roegele.all.years.f(min.year=2016, max.year=2016))
+# 6. Calculate NN zone area (load sz_area.R, run dt.me <- area.all.years.f(min.year=YYYY, max.year=YYYY))
+# 7. Calculate Roeg zone area (run dt.roeg <- roegele.all.years.f(min.year=YYYY, max.year=YYYY))
 # 8. Calculate diff (diff <- dt.me$area - dt.roeg$area)
 # 9. Save diff to file
 # 10. Update umpire evaluations (load umpire_eval.R)
