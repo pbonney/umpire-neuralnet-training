@@ -20,7 +20,7 @@ get.date.range.f <- function(year) {
 
 # Get first and last game date in each month for each season
 min.y <- 2007
-max.y <- 2017
+max.y <- 2018
 
 y.l <- min.y:max.y
 m.l <- mapply(get.date.range.f,y.l)

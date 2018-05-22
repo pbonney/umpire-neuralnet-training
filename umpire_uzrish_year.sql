@@ -6,5 +6,5 @@ SELECT  year(uu.date) as year,
         sum(uu.c-uu.p) as x,
         sum(uu.c-uu.p)/count(*) as x_over_n
 FROM    umpire_ucs_generic uu
-WHERE   year(uu.date)=2017
+WHERE   year(uu.date)=2018
 GROUP BY 1,2;

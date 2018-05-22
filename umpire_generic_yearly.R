@@ -3,8 +3,8 @@ library(parallel)
 
 source("umpire_nn_tools.R")
 
-min.y <- 2016
-max.y <- 2017
+min.y <- 2017
+max.y <- 2018
 
 y.l <- min.y:max.y
 

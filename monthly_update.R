@@ -10,7 +10,7 @@ res_tot_prefix <- "results_tot_"
 res_prefix <- "results_"
 file_type <- ".txt"
 model_dir <- "./models.umpire"
-report_year <- 2017
+report_year <- 2018
 
 # Process:
 # 0. Backup old umpire model files to directory

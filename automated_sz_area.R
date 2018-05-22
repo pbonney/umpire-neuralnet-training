@@ -6,7 +6,7 @@ save_dir <- "./umpire_uzr"
 area_prefix <- "sz_area_"
 file_type <- ".txt"
 
-year.c <- 2017
+year.c <- 2018
 
 message(paste(Sys.time(),"Loading sz_area.R"))
 source("sz_area.R")
